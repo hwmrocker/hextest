@@ -89,14 +89,32 @@ class HexTile(pygame.sprite.Sprite):
         self.r = r
         self.position = (q * COL_WIDTH, (r * ROW_HEIGHT) + (ODD_COL_DISTANCE if (q % 2 == 1) else 0))
         self.rect.topleft = self.position
-    # # convert cube to odd-q offset
-    # q = x
-    # r = z + (x - (x&1)) / 2
 
-    # # convert odd-q offset to cube
-    # x = q
-    # z = r - (q - (q&1)) / 2
-    # y = -x-z
+class Position():
+    def __init__(self, q, r):
+        super(Position, self).__init__()
+        self.q = q
+        self.r = r
+
+    @property
+    def qr(self):
+        return self.q, self.r
+    @qr.setter
+    def qr(self, value):
+        self.q, self.r = value
+
+    @property
+    def xyz(self):
+        x = self.q
+        z = self.r - (self.q - (self.q&1)) / 2
+        y = -x-z
+        return x,y,z
+    @xyz.setter
+    def xyz(self, value):
+        x,y,z = value
+        self.q = x
+        self.r = z + (x - (x&1)) / 2
+
 
 m = Map(16, 12)
 
