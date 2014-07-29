@@ -50,12 +50,6 @@ class Map(pygame.sprite.Group):
         pygame.sprite.Group.draw(self, screen)
         # self.cursor.draw(screen)
         screen.blit(self.cursor.image, self.cursor.rect.topleft)
-
-    def get_hex(self, x, y):
-        column = ((x) / (COL_WIDTH))
-        delta = ODD_COL_DISTANCE if column % 2 == 1 else 0
-        row = ((y - delta) / (ROW_HEIGHT))
-        return column, row
     
     def on_raw_click(self, x, y):
         position = Position(x=x, y=y)
