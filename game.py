@@ -96,9 +96,12 @@ class Position():
         self.q = q
         self.r = r
         if all(i is not None for i in (x,y,z)):
-            self.cube = x,y,z
+            self.cube = x, y, z
         elif all(i is not None for i in (x,z)):
-            self.axial
+            self.axial = x, z
+        elif all(i is not None for i in (x,y)):
+            self.topleft = x, y
+
     @property
     def offset(self):
         return self.q, self.r
@@ -110,7 +113,7 @@ class Position():
     def cube(self):
         x = self.q
         z = self.r - (self.q - (self.q&1)) / 2
-        y = -x-z
+        y = -x - z
         return x,y,z
     @cube.setter
     def cube(self, value):
@@ -120,12 +123,25 @@ class Position():
 
     @property
     def axial(self):
-        x,y,z = self.cube
+        x, y, z = self.cube
         return x, z
     @axial.setter
     def axial(self, value):
-        x,z = value
-        self.cube = x,-x-z,z
+        x, z = value
+        self.cube = x, -x - z, z
+
+    @property
+    def topleft(self):
+        q, r = self.offset
+        return (q * COL_WIDTH, (r * ROW_HEIGHT) + (ODD_COL_DISTANCE if (q % 2 == 1) else 0))
+    @topleft.setter
+    def topleft(self, value):
+        # we will make an rounding error here!
+        x,y = value
+        column = ((x) / (COL_WIDTH))
+        delta = ODD_COL_DISTANCE if column % 2 == 1 else 0
+        row = ((y - delta) / (ROW_HEIGHT))
+        self.offset = column, row
 
 
 m = Map(16, 12)
