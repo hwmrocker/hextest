@@ -91,29 +91,41 @@ class HexTile(pygame.sprite.Sprite):
         self.rect.topleft = self.position
 
 class Position():
-    def __init__(self, q, r):
+    def __init__(self, q=None, r=None, x=None, y=None, z=None):
         super(Position, self).__init__()
         self.q = q
         self.r = r
-
+        if all(i is not None for i in (x,y,z)):
+            self.cube = x,y,z
+        elif all(i is not None for i in (x,z)):
+            self.axial
     @property
-    def qr(self):
+    def offset(self):
         return self.q, self.r
-    @qr.setter
-    def qr(self, value):
+    @offset.setter
+    def offset(self, value):
         self.q, self.r = value
 
     @property
-    def xyz(self):
+    def cube(self):
         x = self.q
         z = self.r - (self.q - (self.q&1)) / 2
         y = -x-z
         return x,y,z
-    @xyz.setter
-    def xyz(self, value):
+    @cube.setter
+    def cube(self, value):
         x,y,z = value
         self.q = x
         self.r = z + (x - (x&1)) / 2
+
+    @property
+    def axial(self):
+        x,y,z = self.cube
+        return x, z
+    @axial.setter
+    def axial(self, value):
+        x,z = value
+        self.cube = x,-x-z,z
 
 
 m = Map(16, 12)
