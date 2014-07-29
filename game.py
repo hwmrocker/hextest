@@ -42,23 +42,40 @@ class Map(pygame.sprite.Group):
         
         self.add(self.cursor)
 
-    def _is_position_valid(self, x, y):
-        return 0 <= x < self._q and 0 <= y < self._r
+    def _is_position_valid(self, position):
+        q, r = position
+        return 0 <= q < self._q and 0 <= r < self._r
 
     def draw(self, screen):
         pygame.sprite.Group.draw(self, screen)
         # self.cursor.draw(screen)
         screen.blit(self.cursor.image, self.cursor.position)
 
-    def onClick(self, x, y):
-        if not self._is_position_valid(x, y):
+    def get_hex(self, x, y):
+        column = ((x) / (COL_WIDTH))
+        delta = ODD_COL_DISTANCE if column % 2 == 1 else 0
+        row = ((y - delta) / (ROW_HEIGHT))
+        return column, row
+    
+    def on_raw_click(self, x, y):
+        position = self.get_hex(x, y)
+        if not self._is_position_valid(position):
             return
-        self._tiles[x][y].image = self._images["black"]
+        return self.on_click(position)
 
-    def onMouseMove(self, x, y):
-        if not self._is_position_valid(x, y):
+    def on_raw_mouse_move(self, x, y):
+        position = self.get_hex(x, y)
+        if not self._is_position_valid(position):
             return
-        self.cursor.update_position(x,y)
+        return self.on_mouse_move(position)
+
+    def on_click(self, position):
+        q, r = position
+        self._tiles[q][r].image = self._images["black"]
+
+    def on_mouse_move(self, position):
+        q, r = position
+        self.cursor.update_position(q, r)
 
 class HexTile(pygame.sprite.Sprite):
     def __init__(self, q, r, image):
@@ -95,11 +112,6 @@ def draw(X,Y):
     # screen.blit(cursor, (X * COL_WIDTH, (Y * ROW_HEIGHT) + (ODD_COL_DISTANCE if (X % 2 == 1) else 0)))
     pygame.display.flip()
 
-def get_hex(x, y):
-    column = ((x) / (COL_WIDTH))
-    delta = ODD_COL_DISTANCE if column % 2 == 1 else 0
-    row = ((y - delta) / (ROW_HEIGHT))
-    return column, row
 
 def mainLoop():    
     X = Y = 0
@@ -122,9 +134,9 @@ def mainLoop():
             
             elif event.type == pygame.locals.MOUSEMOTION:
                 # setCursor(event.pos[0],event.pos[1])
-                m.onMouseMove(*get_hex(event.pos[0],event.pos[1]))
+                m.on_raw_mouse_move(event.pos[0], event.pos[1])
             elif event.type == pygame.locals.MOUSEBUTTONDOWN:
-                m.onClick(* get_hex(event.pos[0],event.pos[1]))
+                m.on_raw_click(event.pos[0], event.pos[1])
 
         # DRAWING             
         draw(X,Y)
