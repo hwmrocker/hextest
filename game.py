@@ -43,7 +43,7 @@ class Map(pygame.sprite.Group):
         self.add(self.cursor)
 
     def _is_position_valid(self, position):
-        q, r = position
+        q, r = position.offset
         return 0 <= q < self._q and 0 <= r < self._r
 
     def draw(self, screen):
@@ -58,24 +58,25 @@ class Map(pygame.sprite.Group):
         return column, row
     
     def on_raw_click(self, x, y):
-        position = self.get_hex(x, y)
+        position = Position(x=x, y=y)
         if not self._is_position_valid(position):
             return
         return self.on_click(position)
 
     def on_raw_mouse_move(self, x, y):
-        position = self.get_hex(x, y)
+        position = Position(x=x, y=y)
         if not self._is_position_valid(position):
             return
         return self.on_mouse_move(position)
 
     def on_click(self, position):
-        q, r = position
+        q, r = position.offset
         self._tiles[q][r].image = self._images["black"]
 
     def on_mouse_move(self, position):
-        q, r = position
+        q, r = position.offset
         self.cursor.update_position(q, r)
+
 
 class HexTile(pygame.sprite.Sprite):
     def __init__(self, q, r, image):
@@ -88,6 +89,7 @@ class HexTile(pygame.sprite.Sprite):
     def update_position(self, q, r):
         self.position.offset = (q,r)
         self.rect.topleft = self.position.topleft
+
 
 class Position(object):
     def __init__(self, q=None, r=None, x=None, y=None, z=None):
