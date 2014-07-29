@@ -49,7 +49,7 @@ class Map(pygame.sprite.Group):
     def draw(self, screen):
         pygame.sprite.Group.draw(self, screen)
         # self.cursor.draw(screen)
-        screen.blit(self.cursor.image, self.cursor.position)
+        screen.blit(self.cursor.image, self.cursor.rect.topleft)
 
     def get_hex(self, x, y):
         column = ((x) / (COL_WIDTH))
@@ -82,15 +82,14 @@ class HexTile(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.image = image
         self.rect = self.image.get_rect()
+        self.position = Position(q,r)
         self.update_position(q, r)
 
     def update_position(self, q, r):
-        self.q = q
-        self.r = r
-        self.position = (q * COL_WIDTH, (r * ROW_HEIGHT) + (ODD_COL_DISTANCE if (q % 2 == 1) else 0))
-        self.rect.topleft = self.position
+        self.position.offset = (q,r)
+        self.rect.topleft = self.position.topleft
 
-class Position():
+class Position(object):
     def __init__(self, q=None, r=None, x=None, y=None, z=None):
         super(Position, self).__init__()
         self.q = q
