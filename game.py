@@ -42,6 +42,15 @@ class Map(pygame.sprite.Group):
         
         self.add(self.cursor)
 
+        # create neighbour links
+        for col in self._tiles:
+            for t in col:
+                for p in t.position.neighbours:
+                    if not self._is_position_valid(p):
+                        continue
+                    q, r = p.offset
+                    t.add_neighbour(self._tiles[q][r])
+
     def _is_position_valid(self, position):
         q, r = position.offset
         return 0 <= q < self._q and 0 <= r < self._r
@@ -66,6 +75,8 @@ class Map(pygame.sprite.Group):
     def on_click(self, position):
         q, r = position.offset
         self._tiles[q][r].image = self._images["black"]
+        for n in self._tiles[q][r].neighbours:
+            n.image = self._images["black"]
 
     def on_mouse_move(self, position):
         q, r = position.offset
@@ -79,10 +90,14 @@ class HexTile(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.position = Position(q,r)
         self.update_position(q, r)
+        self.neighbours = set([])
 
     def update_position(self, q, r):
         self.position.offset = (q,r)
         self.rect.topleft = self.position.topleft
+
+    def add_neighbour(self, other):
+        self.neighbours.add(other)
 
 
 class Position(object):
