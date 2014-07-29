@@ -7,7 +7,7 @@ cursor = pygame.image.load('tiles/cursor.png')
 TILE_WIDTH = TILE_HEIGHT = 80
 ODD_COL_DISTANCE = TILE_HEIGHT / 2
 COL_WIDTH = (TILE_WIDTH / 4) * 3
-COL_HEIGHT = TILE_HEIGHT
+ROW_HEIGHT = TILE_HEIGHT
 
 class Map(pygame.sprite.Group):
     COLORS = [
@@ -28,6 +28,8 @@ class Map(pygame.sprite.Group):
         self._images = dict((color, pygame.image.load('tiles/%s.png' % color)) for color in self.COLORS)
         self._tiles=[]
         self.cursor = HexTile(-1,-1,cursor)
+        self._q = x
+        self._r = y
         for i in range(x):
             col = []
             for j in range(y):
@@ -40,29 +42,44 @@ class Map(pygame.sprite.Group):
         
         self.add(self.cursor)
 
+    def _is_position_valid(self, x, y):
+        return 0 <= x < self._q and 0 <= y < self._r
+
     def draw(self, screen):
         pygame.sprite.Group.draw(self, screen)
         # self.cursor.draw(screen)
         screen.blit(self.cursor.image, self.cursor.position)
 
     def onClick(self, x, y):
+        if not self._is_position_valid(x, y):
+            return
         self._tiles[x][y].image = self._images["black"]
 
     def onMouseMove(self, x, y):
+        if not self._is_position_valid(x, y):
+            return
         self.cursor.update_position(x,y)
 
 class HexTile(pygame.sprite.Sprite):
-    def __init__(self, x,y, image):
+    def __init__(self, q, r, image):
         pygame.sprite.Sprite.__init__(self)
         self.image = image
         self.rect = self.image.get_rect()
-        self.update_position(x,y)
+        self.update_position(q, r)
 
-    def update_position(self, x,y):
-        self.x = x
-        self.y = y
-        self.position = (x * COL_WIDTH, (y * COL_HEIGHT) + (ODD_COL_DISTANCE if (x % 2 == 1) else 0))
+    def update_position(self, q, r):
+        self.q = q
+        self.r = r
+        self.position = (q * COL_WIDTH, (r * ROW_HEIGHT) + (ODD_COL_DISTANCE if (q % 2 == 1) else 0))
         self.rect.topleft = self.position
+    # # convert cube to odd-q offset
+    # q = x
+    # r = z + (x - (x&1)) / 2
+
+    # # convert odd-q offset to cube
+    # x = q
+    # z = r - (q - (q&1)) / 2
+    # y = -x-z
 
 m = Map(16, 12)
 
@@ -73,16 +90,16 @@ def draw(X,Y):
     #         if X == i and Y == j:
     #             tile = darkgreen
     #         foo = ODD_COL_DISTANCE if (i % 2 == 1) else 0
-    #         screen.blit(tile, (i * COL_WIDTH, (j * COL_HEIGHT) + foo))
+    #         screen.blit(tile, (i * COL_WIDTH, (j * ROW_HEIGHT) + foo))
     m.draw(screen)
-    # screen.blit(cursor, (X * COL_WIDTH, (Y * COL_HEIGHT) + (ODD_COL_DISTANCE if (X % 2 == 1) else 0)))
+    # screen.blit(cursor, (X * COL_WIDTH, (Y * ROW_HEIGHT) + (ODD_COL_DISTANCE if (X % 2 == 1) else 0)))
     pygame.display.flip()
 
 def get_hex(x, y):
     column = ((x) / (COL_WIDTH))
     delta = ODD_COL_DISTANCE if column % 2 == 1 else 0
-    row = ((y - delta) / (COL_HEIGHT))
-    return column,row
+    row = ((y - delta) / (ROW_HEIGHT))
+    return column, row
 
 def mainLoop():    
     X = Y = 0
