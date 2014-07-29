@@ -94,6 +94,7 @@ class Position(object):
         super(Position, self).__init__()
         self.q = q
         self.r = r
+        self._neighbours = None
         if all(i is not None for i in (x,y,z)):
             self.cube = x, y, z
         elif all(i is not None for i in (x,z)):
@@ -141,6 +142,16 @@ class Position(object):
         delta = ODD_COL_DISTANCE if column % 2 == 1 else 0
         row = ((y - delta) / (ROW_HEIGHT))
         self.offset = column, row
+
+    @property
+    def neighbours(self):
+        if self._neighbours is not None:
+            return self._neighbours
+        x,z = self.axial
+        self._neighbours = []
+        for dx,dz in [[+1,  0], [+1, -1], [ 0, -1], [-1,  0], [-1, +1], [ 0, +1]]:
+            self.neighbours.append(Position(x=x + dx, z=z + dz))
+        return self._neighbours
 
 
 m = Map(16, 12)
