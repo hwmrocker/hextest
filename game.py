@@ -9,6 +9,7 @@ ODD_COL_DISTANCE = TILE_HEIGHT / 2
 COL_WIDTH = (TILE_WIDTH / 4) * 3
 ROW_HEIGHT = TILE_HEIGHT
 
+
 class Map(pygame.sprite.Group):
     COLORS = [
         "black",
@@ -27,7 +28,7 @@ class Map(pygame.sprite.Group):
         pygame.sprite.Group.__init__(self)
         self._images = dict((color, pygame.image.load('tiles/%s.png' % color)) for color in self.COLORS)
         self._tiles=[]
-        self.cursor = HexTile(-1,-1,cursor)
+        self.cursor = HexTile(-1,-1,"a",{"a":cursor})
         self._q = x
         self._r = y
         for i in range(x):
@@ -35,7 +36,7 @@ class Map(pygame.sprite.Group):
             for j in range(y):
                 rand_col = random.choice(self.COLORS[2:])
                 rand_img = self._images[rand_col]
-                t = HexTile(i,j, rand_img)
+                t = HexTile(i,j, rand_col, self._images)
                 col.append(t)
                 self.add(t)
             self._tiles.append(col)
@@ -57,7 +58,6 @@ class Map(pygame.sprite.Group):
 
     def draw(self, screen):
         pygame.sprite.Group.draw(self, screen)
-        # self.cursor.draw(screen)
         screen.blit(self.cursor.image, self.cursor.rect.topleft)
     
     def on_raw_click(self, x, y):
@@ -74,31 +74,74 @@ class Map(pygame.sprite.Group):
 
     def on_click(self, position):
         q, r = position.offset
-        self._tiles[q][r].image = self._images["black"]
-        for n in self._tiles[q][r].neighbours:
-            n.image = self._images["black"]
+        tobeblack = set([])
+        soon_to_be_black_color = self._tiles[q][r].color
+
+        for ng in list(black_group.neighbours):
+            if ng.color == soon_to_be_black_color:
+                tobeblack |= ng.tiles
+                black_group.merge(ng)
+        black_group.merge(self._tiles[q][r].group)
+
+        for n in self._tiles[q][r].group.tiles:
+            n.set_color("black")
 
     def on_mouse_move(self, position):
         q, r = position.offset
         self.cursor.update_position(q, r)
 
 
+class Group(object):
+    def __init__(self, tiles=None):
+        self.tiles = set([])
+        self.neighbours = set([])
+        self.color = None
+        tiles = [] if tiles is None else tiles
+        for tile in tiles:
+            self.tiles.add(tile)
+            tile.group = self
+            self.color = tile.color
+
+    def merge(self, other):
+        for tile in other.tiles:
+            self.tiles.add(tile)
+            tile.group = self
+        self.neighbours |= other.neighbours
+        other.tiles = None
+        del other
+
+
 class HexTile(pygame.sprite.Sprite):
-    def __init__(self, q, r, image):
+    def __init__(self, q, r, color, images):
         pygame.sprite.Sprite.__init__(self)
-        self.image = image
+        self._images = images
+        self.color = None
+        self.image = None
+        self.set_color(color)
         self.rect = self.image.get_rect()
         self.position = Position(q,r)
         self.update_position(q, r)
         self.neighbours = set([])
+        self.group = Group([self])
 
     def update_position(self, q, r):
         self.position.offset = (q,r)
         self.rect.topleft = self.position.topleft
 
     def add_neighbour(self, other):
-        self.neighbours.add(other)
+        if self.color == other.color:
+            self.group.merge(other.group)
+        else:
+            self.neighbours.add(other)
+            self.group.neighbours.add(other.group)
 
+    def set_color(self, color):
+        assert color in self._images
+        self.image = self._images[color]
+        self.color = color
+
+    def __str__(self):
+        return "HexTile%s" % self.position.offset
 
 class Position(object):
     def __init__(self, q=None, r=None, x=None, y=None, z=None):
@@ -208,5 +251,6 @@ def mainLoop():
         # DRAWING             
         draw(X,Y)
 
+black_group = Group()
 draw(0,0)
 mainLoop()
