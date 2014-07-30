@@ -31,9 +31,12 @@ class Map(pygame.sprite.Group):
         self.cursor = HexTile(-1,-1,"a",{"a":cursor})
         self._q = x
         self._r = y
-        for i in range(x):
+        self.generate_random_map()
+
+    def generate_random_map(self):
+        for i in range(self._q):
             col = []
-            for j in range(y):
+            for j in range(self._r):
                 rand_col = random.choice(self.COLORS[2:])
                 rand_img = self._images[rand_col]
                 t = HexTile(i,j, rand_col, self._images)
