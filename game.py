@@ -3,6 +3,7 @@ import pygame.locals
 import random
 screen = pygame.display.set_mode((1000,1000))
 cursor = pygame.image.load('tiles/cursor.png')
+import yaml
 
 TILE_WIDTH = TILE_HEIGHT = 80
 ODD_COL_DISTANCE = TILE_HEIGHT / 2
@@ -24,28 +25,38 @@ class Map(pygame.sprite.Group):
         "yellow"
     ]
 
-    def __init__(self, x,y):
+    def __init__(self, x=None,y=None,filename=None):
+        assert x and y or filename
         pygame.sprite.Group.__init__(self)
         self._images = dict((color, pygame.image.load('tiles/%s.png' % color)) for color in self.COLORS)
         self._tiles=[]
         self.cursor = HexTile(-1,-1,"a",{"a":cursor})
         self._q = x
         self._r = y
-        self.generate_random_map()
+        if filename:
+            self.load_map(filename)
+            if x and y:
+                assert x == self._q and y == self._r
+        else:
+            self.generate_random_map()
+            self.save_map()
+        # self.add(self.cursor)
 
     def generate_random_map(self):
+        self.empty()
+        self._tiles=[]
         for i in range(self._q):
             col = []
             for j in range(self._r):
                 rand_col = random.choice(self.COLORS[2:])
-                rand_img = self._images[rand_col]
                 t = HexTile(i,j, rand_col, self._images)
                 col.append(t)
                 self.add(t)
             self._tiles.append(col)
         
-        self.add(self.cursor)
+        self.generate_neighbour_links()
 
+    def generate_neighbour_links(self):
         # create neighbour links
         for col in self._tiles:
             for t in col:
@@ -54,6 +65,31 @@ class Map(pygame.sprite.Group):
                         continue
                     q, r = p.offset
                     t.add_neighbour(self._tiles[q][r])
+
+    def save_map(self, filename="latest"):
+        new_map = []
+        for col in self._tiles:
+            new_map.append([t.color for t in col])
+        with open("maps/%s.map" % filename, "w") as fh:
+            yaml.dump(new_map, fh)
+
+    def load_map(self, filename):
+        self.empty()
+        self._tiles=[]
+        with open("maps/%s.map" % filename, "r") as fh:
+            new_map = yaml.load(fh)
+        self._q = len(new_map)
+        self._r = len(new_map[0])
+        for i, col_info in enumerate(new_map):
+            col = []
+            for j, color in enumerate(col_info):
+                t = HexTile(i,j, color, self._images)
+                col.append(t)
+                self.add(t)
+            self._tiles.append(col)
+
+        self.generate_neighbour_links()
+
 
     def _is_position_valid(self, position):
         q, r = position.offset
