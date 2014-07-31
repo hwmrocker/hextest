@@ -177,8 +177,12 @@ class Map(pygame.sprite.Group):
         possible_white = self._get_reachable_groups(self.white_group)
         if any(len(pg) == 0 for pg in (possible_black, possible_white)):
             print("game finished")
-            self.winner = max(self.player_groups, key=lambda g: len(g.tiles))
-            print("%s won the game" % self.winner.color)
+            if len(self.black_group.tiles) == len(self.white_group.tiles):
+                self.winner = True
+                print("oh no, there are only looser :(")
+            else:
+                self.winner = max(self.player_groups, key=lambda g: len(g.tiles))
+                print("%s won the game" % self.winner.color)
             print("Hit space to generate a new map")
 
     def on_mouse_move(self, position):
