@@ -169,6 +169,10 @@ class Map(pygame.sprite.Group):
 
         self.eliminate_enclosed_areas()
         self.player_group = next(self.iter_player_groups)
+        print("Black: %s\nWhite: %s" % (
+            len(self.black_group.tiles),
+            len(self.white_group.tiles))
+        )
 
     def on_mouse_move(self, position):
         q, r = position.offset
