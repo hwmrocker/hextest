@@ -2,7 +2,7 @@ import pygame
 import pygame.locals
 import random
 from itertools import cycle
-
+from collections import Counter
 import yaml
 
 
@@ -152,8 +152,11 @@ class Map(pygame.sprite.Group):
 
     def on_click(self, position):
         q, r = position.offset
-        to_be_black = set([])
         soon_to_be_black_color = self._tiles[q][r].color
+        self.overpower(soon_to_be_black_color)
+
+    def overpower(self, soon_to_be_black_color):
+        to_be_black = set([])
         if soon_to_be_black_color in self.player_colors:
             return
         for ng in list(self.player_group.neighbours):
@@ -184,6 +187,19 @@ class Map(pygame.sprite.Group):
                 self.winner = max(self.player_groups, key=lambda g: len(g.tiles))
                 print("%s won the game" % self.winner.color)
             print("Hit space to generate a new map")
+        else:
+            print("turn for %s" % self.player_group.color)
+            if self.player_group.color == "white":
+                cnt = Counter()
+                for ng in self.player_group.neighbours:
+                    if ng.color in self.player_colors:
+                        continue
+                    cnt.update({ng.color: len(ng.tiles)})
+                print(cnt)
+                color = cnt.most_common(1)[0][0]
+                print(color)
+                print("white choses %s" % color)
+                self.overpower(color)
 
     def on_mouse_move(self, position):
         q, r = position.offset
