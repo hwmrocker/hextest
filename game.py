@@ -2,7 +2,9 @@ import pygame
 import pygame.locals
 import random
 from itertools import cycle
+
 import yaml
+
 
 TILE_WIDTH = TILE_HEIGHT = 80
 ODD_COL_DISTANCE = TILE_HEIGHT / 2
@@ -28,6 +30,7 @@ class Map(pygame.sprite.Group):
         assert x and y or filename
         pygame.sprite.Group.__init__(self)
         self._images = dict((color, pygame.image.load('tiles/%s.png' % color)) for color in self.COLORS)
+        self.player_colors = ["black", "white"]
         self._tiles = []
         self.cursor = HexTile(-1, -1, "a", {"a": pygame.image.load('tiles/cursor.png')})
         self._q = x
@@ -116,11 +119,42 @@ class Map(pygame.sprite.Group):
             return
         return self.on_mouse_move(position)
 
+    def eliminate_enclosed_areas(self):
+        possible_black = self._get_reachable_groups(self.black_group)
+        possible_white = self._get_reachable_groups(self.white_group)
+
+        only_black = possible_black - possible_white
+        only_white = possible_white - possible_black
+
+        for group in only_black:
+            self.black_group.merge(group, update_color=True)
+        for group in only_white:
+            self.white_group.merge(group, update_color=True)
+
+
+    def _get_reachable_groups(self, group):
+        reachable = set([])
+        visited = set([])
+        todo = [n for n in group.neighbours if n.color not in self.player_colors]
+
+        while todo:
+            elem = todo.pop()
+            visited.add(elem)
+            if elem.color in self.player_colors:
+                continue
+            # reachable.update(elem.tiles)
+            reachable.add(elem)
+            for ng in elem.neighbours:
+                if ng not in visited:
+                    todo.append(ng)
+
+        return reachable
+
     def on_click(self, position):
         q, r = position.offset
         to_be_black = set([])
         soon_to_be_black_color = self._tiles[q][r].color
-        if soon_to_be_black_color in ("black", "white"):
+        if soon_to_be_black_color in self.player_colors:
             return
         for ng in list(self.player_group.neighbours):
             if ng.color == soon_to_be_black_color:
@@ -132,6 +166,8 @@ class Map(pygame.sprite.Group):
 
         for n in to_be_black:
             n.set_color(self.player_group.color)
+
+        self.eliminate_enclosed_areas()
         self.player_group = next(self.iter_player_groups)
 
     def on_mouse_move(self, position):
@@ -156,11 +192,13 @@ class Group(object):
             else:
                 tile.set_color(color)
 
-    def merge(self, other):
+    def merge(self, other, update_color=False):
 
         for tile in other.tiles:
             self.tiles.add(tile)
             tile.group = self
+            if update_color:
+                tile.set_color(self.color)
 
         self.neighbours |= other.neighbours
         for on in list(other.neighbours):
