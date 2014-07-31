@@ -126,9 +126,10 @@ class Map(pygame.sprite.Group):
             if ng.color == soon_to_be_black_color:
                 to_be_black |= ng.tiles
                 self.player_group.merge(ng)
-        # self.player_group.merge(self._tiles[q][r].group)
 
-        # for n in self._tiles[q][r].group.tiles:
+        if len(to_be_black) == 0:
+            return
+
         for n in to_be_black:
             n.set_color(self.player_group.color)
         self.player_group = next(self.iter_player_groups)
@@ -160,8 +161,6 @@ class Group(object):
         for tile in other.tiles:
             self.tiles.add(tile)
             tile.group = self
-
-
 
         self.neighbours |= other.neighbours
         for on in list(other.neighbours):
