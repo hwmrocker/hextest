@@ -35,6 +35,7 @@ class Map(pygame.sprite.Group):
         self.cursor = HexTile(-1, -1, "a", {"a": pygame.image.load('tiles/cursor.png')})
         self._q = x
         self._r = y
+        self.winner = None
 
         if filename:
             self.load_map(filename)
@@ -47,7 +48,7 @@ class Map(pygame.sprite.Group):
 
     def generate_random_map(self):
         self.empty()
-        self._tiles=[]
+        self._tiles = []
         for i in range(self._q):
             col = []
             for j in range(self._r):
@@ -62,6 +63,7 @@ class Map(pygame.sprite.Group):
     def generate_neighbour_links(self):
         self.black_group = Group(tiles=[self._tiles[0][-1]], color="black")
         self.white_group = Group(tiles=[self._tiles[-1][0]], color="white")
+        self.player_groups = [self.black_group, self.white_group]
         self.iter_player_groups = cycle([self.black_group, self.white_group])
         self.player_group = next(self.iter_player_groups)
         # create neighbour links
@@ -73,7 +75,6 @@ class Map(pygame.sprite.Group):
                     q, r = p.offset
                     t.add_neighbour(self._tiles[q][r])
                     # self._tiles[q][r].add_neighbour(t)
-
 
     def save_map(self, filename="latest"):
         new_map = []
@@ -92,7 +93,7 @@ class Map(pygame.sprite.Group):
         for i, col_info in enumerate(new_map):
             col = []
             for j, color in enumerate(col_info):
-                t = HexTile(i,j, color, self._images)
+                t = HexTile(i, j, color, self._images)
                 col.append(t)
                 self.add(t)
             self._tiles.append(col)
@@ -131,7 +132,6 @@ class Map(pygame.sprite.Group):
         for group in only_white:
             self.white_group.merge(group, update_color=True)
 
-
     def _get_reachable_groups(self, group):
         reachable = set([])
         visited = set([])
@@ -169,14 +169,26 @@ class Map(pygame.sprite.Group):
 
         self.eliminate_enclosed_areas()
         self.player_group = next(self.iter_player_groups)
-        print("Black: %s\nWhite: %s" % (
+        print("Black: %s\nWhite: %s\n\n" % (
             len(self.black_group.tiles),
             len(self.white_group.tiles))
         )
+        possible_black = self._get_reachable_groups(self.black_group)
+        possible_white = self._get_reachable_groups(self.white_group)
+        if any(len(pg) == 0 for pg in (possible_black, possible_white)):
+            print("game finished")
+            self.winner = max(self.player_groups, key=lambda g: len(g.tiles))
+            print("%s won the game" % self.winner.color)
+            print("Hit space to generate a new map")
 
     def on_mouse_move(self, position):
         q, r = position.offset
         self.cursor.update_position(q, r)
+
+    def on_keypress(self, event):
+        if self.winner:
+            self.generate_random_map()
+            self.winner = None
 
 
 class Group(object):
@@ -189,7 +201,7 @@ class Group(object):
             self.tiles.add(tile)
             try:
                 self.merge(tile.group)
-            except AttributeError, e:
+            except AttributeError:
                 pass
             if color is None:
                 self.color = tile.color
@@ -278,7 +290,7 @@ class Position(object):
     @property
     def cube(self):
         x = self.q
-        z = self.r - (self.q - (self.q&1)) / 2
+        z = self.r - (self.q - (self.q & 1)) / 2
         y = -x - z
         return x, y, z
 
@@ -340,10 +352,10 @@ def draw():
     pygame.display.flip()
 
 
-def mainLoop():    
+def mainLoop():
     # pygame.init()
     clock = pygame.time.Clock()
-                    
+
     while 1:
         clock.tick(30)
 
@@ -352,7 +364,8 @@ def mainLoop():
                 return
             elif event.type == pygame.locals.KEYDOWN:
                 if event.key == pygame.locals.K_ESCAPE:
-                    return                
+                    return
+                m.on_keypress(event)
 
             elif event.type == pygame.locals.MOUSEMOTION:
                 # setCursor(event.pos[0],event.pos[1])
@@ -360,11 +373,12 @@ def mainLoop():
             elif event.type == pygame.locals.MOUSEBUTTONDOWN:
                 m.on_raw_click(event.pos[0], event.pos[1])
 
-        # DRAWING             
+        # DRAWING
         draw()
 
 if __name__ == "__main__":
-    screen = pygame.display.set_mode((1000, 1000))
-    m = Map(filename="foo")
+    screen = pygame.display.set_mode((700, 700))
+    m = Map(11, 8)
+    # m = Map(filename="foo")
     draw()
     mainLoop()
