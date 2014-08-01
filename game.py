@@ -3,6 +3,7 @@ import pygame.locals
 import random
 from itertools import cycle
 from collections import Counter
+from popup import Popup
 import yaml
 
 
@@ -31,12 +32,14 @@ class Map(pygame.sprite.Group):
         pygame.sprite.Group.__init__(self)
         self._images = dict((color, pygame.image.load('tiles/%s.png' % color)) for color in self.COLORS)
         self.player_colors = ["black", "white"]
+        self.auto_players= ["white"]
         self._tiles = []
         self.cursor = HexTile(-1, -1, "a", {"a": pygame.image.load('tiles/cursor.png')})
         self._q = x
         self._r = y
         self.winner = None
-
+        self.popup = Popup()
+        self.popup.add("Welcome")
         if filename:
             self.load_map(filename)
             if x and y:
@@ -107,6 +110,7 @@ class Map(pygame.sprite.Group):
     def draw(self, screen):
         pygame.sprite.Group.draw(self, screen)
         screen.blit(self.cursor.image, self.cursor.rect.topleft)
+        self.popup.draw(screen)
 
     def on_raw_click(self, x, y):
         position = Position(x=x, y=y)
@@ -183,13 +187,16 @@ class Map(pygame.sprite.Group):
             if len(self.black_group.tiles) == len(self.white_group.tiles):
                 self.winner = True
                 print("oh no, there are only looser :(")
+                self.popup.add("oh no, there are only looser :(")
             else:
                 self.winner = max(self.player_groups, key=lambda g: len(g.tiles))
                 print("%s won the game" % self.winner.color)
+                self.popup.add("%s won the game" % self.winner.color)
+
             print("Hit space to generate a new map")
         else:
             print("turn for %s" % self.player_group.color)
-            if self.player_group.color == "white":
+            if self.player_group.color in self.auto_players:
                 cnt = Counter()
                 for ng in self.player_group.neighbours:
                     if ng.color in self.player_colors:
@@ -373,7 +380,6 @@ def draw():
 
 
 def mainLoop():
-    # pygame.init()
     clock = pygame.time.Clock()
 
     while 1:
@@ -397,6 +403,7 @@ def mainLoop():
         draw()
 
 if __name__ == "__main__":
+    pygame.init()
     screen = pygame.display.set_mode((700, 700))
     m = Map(11, 8)
     # m = Map(filename="foo")
