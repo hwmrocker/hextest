@@ -8,9 +8,11 @@ import time
 
 
 class Popup(object):
-    def __init__(self):
-        self.fnt = pygame.font.Font("fonts/ArmWrestler.ttf", 30)
-        self.color = (245, 101, 44)  # orange ;)
+    def __init__(self, **kwargs):
+        self.fnt = pygame.font.Font(kwargs.get("font","fonts/ArmWrestler.ttf"), kwargs.get("fontsize",30))
+        self.color = kwargs.get("fontcolor",(245, 101, 44))  # orange ;)
+        self.background_color = kwargs.get("background_color", (123,123,0))
+        self.line_height_ratio = kwargs.get("line_height_ratio", 1.6)
         self.popups = []
         self.defaultDuration = 3
 
@@ -29,22 +31,34 @@ class Popup(object):
         if len(self.popups) == 0:
             return False
 
-        fullText = ""
         for i in range(len(self.popups)):
             if time.time() > self.popups[i]['start'] + self.popups[i]['duration']:
                 self.popups.pop(i)
                 break
 
-        for popup in self.popups:
-            fullText += popup['txt'] + " "
+        fullText = "\n".join(popup['txt'] for popup in self.popups).strip()
 
-        # TODO: multilines!
-        # http://stackoverflow.com/questions/2770886/pygames-message-multiple-lines
         if fullText != "":
             xPos = (screen.get_width() / 2)
             screen_width = screen.get_width()
-            font_size = self.fnt.size(fullText)
-            pygame.draw.rect(screen, (123,123,0), (screen_width*0.2, 0, screen_width*0.6, font_size[1]+10))
-            screen.blit(self.fnt.render(fullText, 1, self.color), (xPos - (font_size[0] / 2), 5))
+            lines = fullText.splitlines()
+
+            max_width = 0
+            height = 0
+            for line in lines:
+                width, height = self.fnt.size(line)
+                max_width = max(width, max_width)
+                height += self.line_height_ratio * height
+
+            pygame.draw.rect(screen, self.background_color,
+                             (screen_width * 0.2, 0, screen_width * 0.6, height + 10))
+            x = 0
+            for line in lines:
+                font_size = self.fnt.size(line)
+                screen.blit(
+                    self.fnt.render(line, 1, self.color),
+                    ((screen_width / 2) - (font_size[0] / 2), x)
+                )
+                x += self.line_height_ratio * font_size[1]
 
         return True
