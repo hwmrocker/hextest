@@ -147,44 +147,57 @@ class Map(pygame.sprite.Group):
         todo = [n for n in group.neighbours if n.color not in self.player_colors]
 
         while todo:
-            elem = todo.pop()
-            visited.add(elem)
-            if elem.color in self.player_colors:
+            group = todo.pop()
+            visited.add(group)
+            if group.color in self.player_colors:
                 continue
-            # reachable.update(elem.tiles)
-            reachable.add(elem)
-            for ng in elem.neighbours:
-                if ng not in visited:
-                    todo.append(ng)
+
+            reachable.add(group)
+            for neighbour in group.neighbours:
+                if neighbour not in visited:
+                    todo.append(neighbour)
 
         return reachable
 
     def on_click(self, position):
         q, r = position.offset
-        soon_to_be_black_color = self._tiles[q][r].color
-        self.overpower(soon_to_be_black_color)
+        color_to_overpower = self._tiles[q][r].color
+        self.overpower(color_to_overpower)
 
-    def overpower(self, soon_to_be_black_color):
-        to_be_black = set([])
-        if soon_to_be_black_color in self.player_colors:
-            return
-        for ng in list(self.player_group.neighbours):
-            if ng.color == soon_to_be_black_color:
-                to_be_black |= ng.tiles
-                self.player_group.merge(ng)
+    def overpower(self, color_to_overpower):
+        # new_friends are the tiles that will change the color this round
+        new_friends = set([])
 
-        if len(to_be_black) == 0:
-            return
+        # it is not possible to overpower a human player
+        if color_to_overpower in self.player_colors:
+            return False
 
-        for n in to_be_black:
+        for group in list(self.player_group.neighbours):
+            if group.color == color_to_overpower:
+                new_friends |= group.tiles
+                self.player_group.merge(group)
+
+        if len(new_friends) == 0:
+            return False
+
+        for n in new_friends:
             n.set_color(self.player_group.color)
 
         self.eliminate_enclosed_areas()
+        return True
+
+    def end_of_round(self):
         self.player_group = next(self.iter_player_groups)
+
         print("Black: %s\nWhite: %s\n\n" % (
             len(self.black_group.tiles),
             len(self.white_group.tiles))
         )
+
+        # check if the game is finished
+
+        # we detect the reachable groups allready during the elimination
+        # TODO maybe some caching if we get performance issues with big maps
         possible_black = self._get_reachable_groups(self.black_group)
         possible_white = self._get_reachable_groups(self.white_group)
         if any(len(pg) == 0 for pg in (possible_black, possible_white)):
@@ -202,16 +215,21 @@ class Map(pygame.sprite.Group):
         else:
             print("turn for %s" % self.player_group.color)
             if self.player_group.color in self.auto_players:
-                cnt = Counter()
-                for ng in self.player_group.neighbours:
-                    if ng.color in self.player_colors:
-                        continue
-                    cnt.update({ng.color: len(ng.tiles)})
-                print(cnt)
-                color = cnt.most_common(1)[0][0]
-                print(color)
-                print("white choses %s" % color)
-                self.overpower(color)
+            # it is auto players turn
+                self.auto_player()
+
+    def auto_player(self):
+        """
+        overpowers a color
+        """
+        cnt = Counter()
+        for ng in self.player_group.neighbours:
+            if ng.color in self.player_colors:
+                continue
+            cnt.update({ng.color: len(ng.tiles)})
+        color = cnt.most_common(1)[0][0]
+        print("white choses %s" % color)
+        self.overpower(color)
 
     def on_mouse_move(self, position):
         q, r = position.offset
