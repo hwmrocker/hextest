@@ -10,10 +10,10 @@ import yaml
 TILE_WIDTH = TILE_HEIGHT = 80
 
 EVEN_COL_DISTANCE = 0
-ODD_COL_DISTANCE = TILE_HEIGHT / 2
+ODD_COL_DISTANCE = TILE_HEIGHT // 2
 
 # we use flat topped hexagons
-COL_WIDTH = (TILE_WIDTH / 4) * 3
+COL_WIDTH = (TILE_WIDTH // 4) * 3
 ROW_HEIGHT = TILE_HEIGHT
 
 
@@ -322,7 +322,7 @@ class Position(object):
     @property
     def cube(self):
         x = self.q
-        z = self.r - (self.q - (self.q & 1)) / 2
+        z = self.r - (self.q - (self.q & 1)) // 2
         y = -x - z
         return x, y, z
 
@@ -330,7 +330,7 @@ class Position(object):
     def cube(self, value):
         x, y, z = value
         self.q = x
-        self.r = z + (x - (x & 1)) / 2
+        self.r = z + (x - (x & 1)) // 2
 
     @property
     def axial(self):
@@ -352,9 +352,9 @@ class Position(object):
     def topleft(self, value):
         # we will make an rounding error here!
         x, y = value
-        column = (x / COL_WIDTH)
+        column = (x // COL_WIDTH)
         delta = ODD_COL_DISTANCE if column % 2 == 1 else EVEN_COL_DISTANCE
-        row = ((y - delta) / ROW_HEIGHT)
+        row = ((y - delta) // ROW_HEIGHT)
         self.offset = column, row
 
     @property
