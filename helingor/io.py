@@ -18,11 +18,15 @@ class Map(pygame.sprite.Group):
 
     def inform_colors(self, my_color, player_colors, game_colors):
         self.popup.add("You are %s" % my_color)
+        self.color = my_color
         self._images = dict((color, pygame.image.load('tiles/%s.png' % color)) for color in game_colors)
 
     def inform_valid_position_infos(self, q, r):
         self._q = q
         self._r = r
+
+    def inform_text(self, text):
+        self.popup.add(text)
 
     def inform_new_map(self, new_map):
         self.empty()
@@ -36,7 +40,6 @@ class Map(pygame.sprite.Group):
                 col.append(t)
                 self.add(t)
             self._tiles.append(col)
-        pass
 
     def _is_position_valid(self, position):
         q, r = position.offset
@@ -68,9 +71,7 @@ class Map(pygame.sprite.Group):
         self.cursor.update_position(position)
 
     def on_keypress(self, event):
-        if self.winner:
-            self.generate_random_map()
-            self.winner = None
+        self._game.ready(self)
 
 
 class HexTileSprite(pygame.sprite.Sprite):

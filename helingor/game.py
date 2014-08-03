@@ -34,7 +34,7 @@ class Game(object):
         self._r = y
         self.player_colors = ["black", "white"]
         self.auto_players = ["black", "white"]
-        self._clients = set([])
+        self._clients = {}
         self._tiles = []
         self.winner = None
         if filename:
@@ -45,13 +45,39 @@ class Game(object):
             self.generate_random_map()
             self.save_map()
 
+    def ready(self, client):
+        if self.winner:
+            self.generate_random_map()
+            self.update_client_maps()
+    
     def hookup_client(self, client):
         assert self.auto_players, "no player position left"
-        self._clients.add(client)
         client_color = self.auto_players.pop(0)
+        self._clients[client_color] = client
         client.inform_colors(client_color, self.player_colors, self.COLORS)
         client.inform_valid_position_infos(self._q, self._r)
-        client.inform_new_map(self._serialize_map())
+        self.update_client_maps(client_color)
+
+
+    def update_client_maps(self, color=None):
+        for client_color, client in self._clients.items():
+            if color and color != client_color:
+                continue
+            client.inform_new_map(self._serialize_map())
+
+    def print_to_all(self, text):
+        for client in self._clients.values():
+            client.inform_text(text)
+
+    def print_to_others(self, color, text):
+        for client_color, client in self._clients.items():
+            if client_color == color:
+                continue
+            client.inform_text(text)
+
+    def print_to_color(self, color, text):
+        if color in self._clients:
+            self._clients[color].inform_text(text)
 
     def generate_random_map(self):
         self._tiles = []
@@ -164,8 +190,7 @@ class Game(object):
 
     def end_of_round(self):
         self.player_group = next(self.iter_player_groups)
-        for client in self._clients:
-            client.inform_new_map(self._serialize_map())
+        self.update_client_maps()
 
         print("Black: %s\nWhite: %s\n\n" % (
             len(self.black_group.tiles),
@@ -179,15 +204,15 @@ class Game(object):
         possible_black = self._get_reachable_groups(self.black_group)
         possible_white = self._get_reachable_groups(self.white_group)
         if any(len(pg) == 0 for pg in (possible_black, possible_white)):
-            print("game finished")
+            self.print_to_all("game finished")
             if len(self.black_group.tiles) == len(self.white_group.tiles):
                 self.winner = True
-                print("oh no, there are only looser :(")
-                self.popup.add("oh no, there are only looser :(")
+                self.print_to_all("oh no, there are only looser :(")
             else:
                 self.winner = max(self.player_groups, key=lambda g: len(g.tiles))
                 print("%s won the game" % self.winner.color)
-                self.popup.add("%s won the game" % self.winner.color)
+                self.print_to_color(self.winner.color, "You won")
+                self.print_to_others(self.winner.color, "You lost")
 
             print("Hit space to generate a new map")
         else:
