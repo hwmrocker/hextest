@@ -21,7 +21,9 @@ Install pygame for python3 (Mint/Ubuntu)
 
 	. ./py3/bin/activate
 
-	sudo apt-get install python3-dev libsdl-image1.2-dev libsdl-mixer1.2-dev libsdl-ttf2.0-dev libsdl1.2-dev libsmpeg-dev python-numpy subversion libportmidi-dev libfreetype6-dev
+	sudo apt-get install python3-dev libsdl-image1.2-dev libsdl-mixer1.2-dev \
+	libsdl-ttf2.0-dev libsdl1.2-dev libsmpeg-dev python-numpy subversion \
+	libportmidi-dev libfreetype6-dev
 
 	svn co svn://seul.org/svn/pygame/trunk pygame
 	cd pygame
