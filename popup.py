@@ -19,11 +19,11 @@ class Popup(object):
         :param line_height_ratio: float (default: 1.2)
         """
         self.fnt = pygame.font.Font(
-            kwargs.get("font","fonts/ArmWrestler.ttf"),
-            kwargs.get("fontsize",30)
+            kwargs.get("font", "fonts/ArmWrestler.ttf"),
+            kwargs.get("fontsize", 30)
         )
-        self.color = kwargs.get("fontcolor",(245, 101, 44))  # orange ;)
-        self.background_color = kwargs.get("background_color", (123,123,0))
+        self.color = kwargs.get("fontcolor", (245, 101, 44))  # orange ;)
+        self.background_color = kwargs.get("background_color", (123, 123, 0))
         self.line_height_ratio = kwargs.get("line_height_ratio", 1.2)
         self.popups = []
         self.default_duration = 3
@@ -52,12 +52,11 @@ class Popup(object):
         # delete old popups
         self.popups = [p for p in self.popups if now < p['start'] + p['duration']]
 
-        fullText = "\n".join(p['txt'] for p in self.popups if now > p["start"]).strip()
+        text_to_print = "\n".join(p['txt'].strip() for p in self.popups if now > p["start"])
 
-        if fullText != "":
-            xPos = (screen.get_width() / 2)
+        if text_to_print != "":
             screen_width = screen.get_width()
-            lines = fullText.splitlines()
+            lines = text_to_print.splitlines()
 
             # calculate dimensions for background
             max_width = 0
