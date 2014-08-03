@@ -49,7 +49,7 @@ class Game(object):
         if self.winner:
             self.generate_random_map()
             self.update_client_maps()
-    
+
     def hookup_client(self, client):
         assert self.auto_players, "no player position left"
         client_color = self.auto_players.pop(0)
@@ -57,7 +57,6 @@ class Game(object):
         client.inform_colors(client_color, self.player_colors, self.COLORS)
         client.inform_valid_position_infos(self._q, self._r)
         self.update_client_maps(client_color)
-
 
     def update_client_maps(self, color=None):
         for client_color, client in self._clients.items():
