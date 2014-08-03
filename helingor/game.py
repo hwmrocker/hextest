@@ -14,7 +14,8 @@ COL_WIDTH = (TILE_WIDTH // 4) * 3
 ROW_HEIGHT = TILE_HEIGHT
 
 
-class Game(object):
+class Game:
+
     """
     Clients will call:
     hookup_client
@@ -241,6 +242,7 @@ class Game(object):
 
 
 class Group(object):
+
     def __init__(self, tiles=None, color=None):
         self.tiles = set([])
         self.neighbours = set([])
@@ -278,6 +280,7 @@ class Group(object):
 
 
 class HexTile(object):
+
     def __init__(self, position, color):
         self.color = color
         self.position = position
@@ -302,6 +305,7 @@ class HexTile(object):
 
 
 class Position(object):
+
     def __init__(self, q=None, r=None, x=None, y=None, z=None):
         super(Position, self).__init__()
         self.q = q

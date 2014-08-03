@@ -14,6 +14,7 @@ def draw():
     m.draw(screen)
     pygame.display.flip()
 
+
 @asyncio.coroutine
 def main_loop(loop):
     now = last = time.time()
@@ -44,8 +45,8 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     pygame.init()
     screen = pygame.display.set_mode((700, 700))
-    game = Game(11, 8)
-    m = Map(game)
+    game = Game(11, 8, loop=loop)
+    m = Map(game, loop=loop)
     game.hookup_client(m)
     draw()
 
