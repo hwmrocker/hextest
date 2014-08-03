@@ -10,8 +10,8 @@ run on python version 3.3+.
 Requirements
 ------------
 
-pygame
-pyyaml
+- pygame
+- pyyaml
 
 
 Install pygame for python3 (Mint/Ubuntu)
