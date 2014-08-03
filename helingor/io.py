@@ -4,9 +4,9 @@ from .popup import Popup
 from .game import Position
 
 
-class Map(pygame.sprite.Group):
+class LocalClient(pygame.sprite.Group):
 
-    def __init__(self, game):
+    def __init__(self, game, loop):
         # pygame.sprite.Group.__init__(self)
         super().__init__()
         self._images = {}
@@ -15,6 +15,7 @@ class Map(pygame.sprite.Group):
         self.popup = Popup()
         self.popup.add("Welcome")
         self._game = game
+        self._loop = loop
 
     def inform_colors(self, my_color, player_colors, game_colors):
         self.popup.add("You are %s" % my_color)

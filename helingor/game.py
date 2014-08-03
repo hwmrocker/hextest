@@ -35,7 +35,7 @@ class Game:
         "yellow"
     ]
 
-    def __init__(self, x=None, y=None, filename=None):
+    def __init__(self, x=None, y=None, filename=None, loop=None):
         assert x and y or filename
         self._q = x
         self._r = y
@@ -44,6 +44,7 @@ class Game:
         self._clients = {}
         self._tiles = []
         self.winner = None
+        self._loop = loop
         if filename:
             self.load_map(filename)
             if x and y:
@@ -225,7 +226,7 @@ class Game:
             print("turn for %s" % self.player_group.color)
             if self.player_group.color in self.auto_players:
             # it is auto players turn
-                self.auto_player()
+                self._loop.call_later(0.5, self.auto_player)
 
     def auto_player(self):
         """

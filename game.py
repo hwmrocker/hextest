@@ -1,7 +1,7 @@
 import pygame
 import asyncio
 import time
-from helingor.io import Map
+from helingor.io import LocalClient
 from helingor.game import Game
 
 
@@ -11,7 +11,7 @@ def draw():
     else:
         screen.fill((250, 250, 250))
 
-    m.draw(screen)
+    local_client.draw(screen)
     pygame.display.flip()
 
 
@@ -20,9 +20,9 @@ def main_loop(loop):
     now = last = time.time()
 
     while True:
+        # 30 frames per second, considering computation/drawing time
         last, now = now, time.time()
         time_per_frame = 1 / 30
-        # yield from clock.tick(30)
         yield from asyncio.sleep(last + time_per_frame - now)
 
         for event in pygame.event.get():
@@ -31,12 +31,12 @@ def main_loop(loop):
             elif event.type == pygame.locals.KEYDOWN:
                 if event.key == pygame.locals.K_ESCAPE:
                     return
-                m.on_keypress(event)
+                local_client.on_keypress(event)
 
             elif event.type == pygame.locals.MOUSEMOTION:
-                m.on_raw_mouse_move(event.pos[0], event.pos[1])
+                local_client.on_raw_mouse_move(event.pos[0], event.pos[1])
             elif event.type == pygame.locals.MOUSEBUTTONDOWN:
-                m.on_raw_click(event.pos[0], event.pos[1])
+                local_client.on_raw_click(event.pos[0], event.pos[1])
 
         # DRAWING
         draw()
@@ -46,8 +46,8 @@ if __name__ == "__main__":
     pygame.init()
     screen = pygame.display.set_mode((700, 700))
     game = Game(11, 8, loop=loop)
-    m = Map(game, loop=loop)
-    game.hookup_client(m)
+    local_client = LocalClient(game, loop=loop)
+    game.hookup_client(local_client)
     draw()
 
     try:
