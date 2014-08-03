@@ -1,5 +1,5 @@
 """
-authors: bison, hwmrocker (cosmetic changes)
+authors: bison, hwmrocker
 
 """
 
@@ -26,17 +26,17 @@ class Popup(object):
         self.background_color = kwargs.get("background_color", (123,123,0))
         self.line_height_ratio = kwargs.get("line_height_ratio", 1.2)
         self.popups = []
-        self.defaultDuration = 3
+        self.default_duration = 3
 
     def single_popup(self, txt, duration=0):
         if duration == 0:
-            duration = self.defaultDuration
+            duration = self.default_duration
         self.popups = []
         self.popups.append({"txt": txt, "start": time.time(), "duration": duration})
 
     def add(self, txt, duration=0, start=0):
         if duration == 0:
-            duration = self.defaultDuration
+            duration = self.default_duration
         self.popups.append({"txt": txt, "start": time.time() + start, "duration": duration})
 
     def draw(self, screen):
@@ -61,24 +61,24 @@ class Popup(object):
 
             # calculate dimensions for background
             max_width = 0
-            height = 0
+            total_height = 0
             for line in lines:
                 width, height = self.fnt.size(line)
                 max_width = max(width, max_width)
-                height += self.line_height_ratio * height
+                total_height += self.line_height_ratio * height
 
             # add a little bit vertical space before and after the text
-            height += (self.line_height_ratio - 1) * height
+            total_height += (self.line_height_ratio - 1) * total_height
 
             # draw the background
             pygame.draw.rect(
                 screen,
                 self.background_color,
-                (screen_width * 0.2, 0, screen_width * 0.6, height)
+                (screen_width * 0.2, 0, screen_width * 0.6, total_height)
             )
 
             # divide the extra vertical space in half
-            x = (self.line_height_ratio - 1) * height * 0.5
+            x = (self.line_height_ratio - 1) * total_height * 0.5
             for line in lines:
                 # draw line by line
                 font_size = self.fnt.size(line)
