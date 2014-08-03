@@ -39,7 +39,8 @@ class Map(pygame.sprite.Group):
         self._r = y
         self.winner = None
         self.popup = Popup()
-        self.popup.add("Welcome\nto the jungle")
+        self.popup.add("Welcome")
+        self.popup.add("to the jungle", start=1)
         if filename:
             self.load_map(filename)
             if x and y:

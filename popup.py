@@ -34,10 +34,10 @@ class Popup(object):
         self.popups = []
         self.popups.append({"txt": txt, "start": time.time(), "duration": duration})
 
-    def add(self, txt, duration=0):
+    def add(self, txt, duration=0, start=0):
         if duration == 0:
             duration = self.defaultDuration
-        self.popups.append({"txt": txt, "start": time.time(), "duration": duration})
+        self.popups.append({"txt": txt, "start": time.time() + start, "duration": duration})
 
     def draw(self, screen):
         """
@@ -47,12 +47,12 @@ class Popup(object):
         if len(self.popups) == 0:
             return False
 
-        for i in range(len(self.popups)):
-            if time.time() > self.popups[i]['start'] + self.popups[i]['duration']:
-                self.popups.pop(i)
-                break
+        now = time.time()
 
-        fullText = "\n".join(popup['txt'] for popup in self.popups).strip()
+        # delete old popups
+        self.popups = [p for p in self.popups if now < p['start'] + p['duration']]
+
+        fullText = "\n".join(p['txt'] for p in self.popups if now > p["start"]).strip()
 
         if fullText != "":
             xPos = (screen.get_width() / 2)
