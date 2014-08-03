@@ -36,7 +36,7 @@ class Map(pygame.sprite.Group):
         pygame.sprite.Group.__init__(self)
         self._images = dict((color, pygame.image.load('tiles/%s.png' % color)) for color in self.COLORS)
         self.player_colors = ["black", "white"]
-        self.auto_players= ["white"]
+        self.auto_players = ["white"]
         self._tiles = []
         self.cursor = HexTile(-1, -1, "a", {"a": pygame.image.load('tiles/cursor.png')})
         self._q = x
