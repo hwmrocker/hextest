@@ -1,0 +1,6 @@
+*.pyc
+*.sublime*
+*.swp
+maps/latest.map
+py3
+pygame
