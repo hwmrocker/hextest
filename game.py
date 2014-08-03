@@ -287,22 +287,12 @@ class Group(object):
         return self.__str__()
 
 
-class HexTile(pygame.sprite.Sprite):
-    def __init__(self, q, r, color, images):
-        pygame.sprite.Sprite.__init__(self)
-        self._images = images
+class HexTile(object):
+    def __init__(self, position, color):
         self.color = None
-        self.image = None
-        self.set_color(color)
-        self.rect = self.image.get_rect()
-        self.position = Position(q, r)
-        self.update_position(q, r)
-        self.neighbours = set([])
+        self.position = position
+        # self.neighbours = set([])
         self.group = Group([self])
-
-    def update_position(self, q, r):
-        self.position.offset = (q, r)
-        self.rect.topleft = self.position.topleft
 
     def add_neighbour(self, other):
         self.group.neighbours.add(other.group)
@@ -312,16 +302,28 @@ class HexTile(pygame.sprite.Sprite):
         if self.color == other.color:
             self.group.merge(other.group)
 
-    def set_color(self, color):
-        assert color in self._images
-        self.image = self._images[color]
-        self.color = color
-
     def __str__(self):
         return "HexTile(%s,%s)" % self.position.offset
 
     def __repr__(self):
         return self.__str__()
+
+
+class HexTileSprite(pygame.sprite.Sprite):
+    def __init__(self, position, image):
+        super().__init__()
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.update_position(position)
+
+    def update_position(self, position):
+        self.rect.topleft = position.topleft
+
+    def set_color(self, color):
+        raise Exception("set_color is depricated")
+        self.image = self._images[color]
+        self.color = color
+
 
 
 class Position(object):

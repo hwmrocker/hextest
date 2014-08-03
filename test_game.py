@@ -1,4 +1,4 @@
-from game import Group, Position, Map
+from game import Group, Position, Map, Game
 
 
 class MockTile(object):
@@ -57,7 +57,7 @@ def test_position():
 
 
 def test_map():
-    m = Map(filename="foo")
+    m = Game(filename="foo")
     assert m._is_position_valid(Position(2, 2))
     assert m._is_position_valid(Position(15, 2))
     assert m._is_position_valid(Position(16, 2)) == False
