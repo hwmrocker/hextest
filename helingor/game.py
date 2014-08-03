@@ -15,6 +15,12 @@ ROW_HEIGHT = TILE_HEIGHT
 
 
 class Game(object):
+    """
+    Clients will call:
+    hookup_client
+    overpower
+    ready
+    """
     COLORS = [
         "black",
         "white",
