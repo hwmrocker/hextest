@@ -17,7 +17,7 @@ COL_WIDTH = (TILE_WIDTH // 4) * 3
 ROW_HEIGHT = TILE_HEIGHT
 
 
-class Map(pygame.sprite.Group):
+class Game(object):
     COLORS = [
         "black",
         "white",
@@ -33,18 +33,10 @@ class Map(pygame.sprite.Group):
 
     def __init__(self, x=None, y=None, filename=None):
         assert x and y or filename
-        pygame.sprite.Group.__init__(self)
-        self._images = dict((color, pygame.image.load('tiles/%s.png' % color)) for color in self.COLORS)
+
         self.player_colors = ["black", "white"]
         self.auto_players = ["white"]
-        self._tiles = []
-        self.cursor = HexTile(-1, -1, "a", {"a": pygame.image.load('tiles/cursor.png')})
-        self._q = x
-        self._r = y
         self.winner = None
-        self.popup = Popup()
-        self.popup.add("Welcome")
-        self.popup.add("to the jungle", start=1)
         if filename:
             self.load_map(filename)
             if x and y:
@@ -112,23 +104,6 @@ class Map(pygame.sprite.Group):
         q, r = position.offset
         return 0 <= q < self._q and 0 <= r < self._r
 
-    def draw(self, screen):
-        pygame.sprite.Group.draw(self, screen)
-        screen.blit(self.cursor.image, self.cursor.rect.topleft)
-        self.popup.draw(screen)
-
-    def on_raw_click(self, x, y):
-        position = Position(x=x, y=y)
-        if not self._is_position_valid(position):
-            return
-        return self.on_click(position)
-
-    def on_raw_mouse_move(self, x, y):
-        position = Position(x=x, y=y)
-        if not self._is_position_valid(position):
-            return
-        return self.on_mouse_move(position)
-
     def eliminate_enclosed_areas(self):
         possible_black = self._get_reachable_groups(self.black_group)
         possible_white = self._get_reachable_groups(self.white_group)
@@ -159,11 +134,6 @@ class Map(pygame.sprite.Group):
 
         return reachable
 
-    def on_click(self, position):
-        q, r = position.offset
-        color_to_overpower = self._tiles[q][r].color
-        self.overpower(color_to_overpower)
-
     def overpower(self, color_to_overpower):
         # new_friends are the tiles that will change the color this round
         new_friends = set([])
@@ -184,6 +154,7 @@ class Map(pygame.sprite.Group):
             n.set_color(self.player_group.color)
 
         self.eliminate_enclosed_areas()
+        self.end_of_round()
         return True
 
     def end_of_round(self):
@@ -230,6 +201,43 @@ class Map(pygame.sprite.Group):
         color = cnt.most_common(1)[0][0]
         print("white choses %s" % color)
         self.overpower(color)
+
+
+class Map(pygame.sprite.Group, Game):
+
+    def __init__(self):
+        # pygame.sprite.Group.__init__(self)
+        super().__init__()
+        self._images = dict((color, pygame.image.load('tiles/%s.png' % color)) for color in self.COLORS)
+        self._tiles = []
+        self.cursor = HexTile(-1, -1, "a", {"a": pygame.image.load('tiles/cursor.png')})
+        self._q = x
+        self._r = y
+        self.popup = Popup()
+        self.popup.add("Welcome")
+        self.popup.add("to the jungle", start=1)
+
+    def draw(self, screen):
+        pygame.sprite.Group.draw(self, screen)
+        screen.blit(self.cursor.image, self.cursor.rect.topleft)
+        self.popup.draw(screen)
+
+    def on_raw_click(self, x, y):
+        position = Position(x=x, y=y)
+        if not self._is_position_valid(position):
+            return
+        return self.on_click(position)
+
+    def on_raw_mouse_move(self, x, y):
+        position = Position(x=x, y=y)
+        if not self._is_position_valid(position):
+            return
+        return self.on_mouse_move(position)
+
+    def on_click(self, position):
+        q, r = position.offset
+        color_to_overpower = self._tiles[q][r].color
+        self.overpower(color_to_overpower)
 
     def on_mouse_move(self, position):
         q, r = position.offset
