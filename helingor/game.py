@@ -1,6 +1,8 @@
+import asyncio
 import random
+import msgpack
 from itertools import cycle
-from collections import Counter
+from collections import Counter, namedtuple
 import yaml
 
 
@@ -13,6 +15,91 @@ ODD_COL_DISTANCE = TILE_HEIGHT // 2
 COL_WIDTH = (TILE_WIDTH // 4) * 3
 ROW_HEIGHT = TILE_HEIGHT
 
+
+Client = namedtuple('Client', 'reader writer')
+class ClientStub:
+
+    def __init__(self, reader, writer):
+        self.reader = reader
+        self.writer = writer
+        self.color = None
+        self.peername = None
+
+    def inform(self, msg_type, args):
+        # print(msg_type)
+        self.writer.write(msgpack.packb((msg_type, args)))
+
+class Server:
+    """
+    took the structure from
+    https://github.com/Mionar/aiosimplechat
+    it was MIT licenced
+    """
+    clients = {}
+    server = None
+
+    def __init__(self, game, host='127.0.0.1', port=8001):
+        self.game = game
+        self.host = host
+        self.port = port
+        self.clients = {}
+
+    @asyncio.coroutine
+    def run_server(self):
+        try:
+            self.server = yield from asyncio.start_server(self.client_connected, self.host, self.port)
+            print('Running server on {}:{}'.format(self.host, self.port))
+        except OSError:
+            print('Cannot bind to this port! Is the server already running?')
+
+    def send_to_client(self, peername, msg):
+        client = self.clients[peername]
+        # print('Sending to {}'.format(peername))
+        client.writer.write(msgpack.packb(msg))
+        return
+
+    def send_to_all_clients(self, msg):
+        for peername in self.clients.keys():
+            self.send_to_client(peername, msg)
+        return
+
+    def close_clients(self):
+        # print('Sending EndOfFile to all clients to close them.')
+        for peername, client in self.clients.items():
+            client.writer.write_eof()
+
+    @asyncio.coroutine
+    def client_connected(self, reader, writer):
+        # print('Client connected.')
+        peername = writer.transport.get_extra_info('peername')
+        new_client = ClientStub(reader, writer)
+        self.game.hookup_client(new_client)
+        self.clients[peername] = new_client
+        # self.send_to_client(peername, 'Welcome to this server client: {}'.format(peername))
+        unpacker = msgpack.Unpacker(encoding='utf-8')
+        while not reader.at_eof():
+            try:
+                pack = yield from reader.read(1024)
+                unpacker.feed(pack)
+                for msg in unpacker:
+                    self.game.inform(*msg)
+                    # if msg:
+                    #     msg = msg.decode().strip()
+                    #     # print('Server Received: "{}"'.format(msg))
+                    #     if not msg == 'close()':
+                    #         self.send_to_all_clients(msg)
+                    #     else:
+                    #         # print('User {} disconnected'.format(peername))
+                    #         del self.clients[peername]
+                    #         self.send_to_all_clients('User disconnected')
+                    #         writer.write_eof()
+            except ConnectionResetError as e:
+                # print('ERROR: {}'.format(e))
+                del self.clients[peername]
+                return
+
+    def close(self):
+        self.close_clients()
 
 class Game:
 
@@ -53,7 +140,13 @@ class Game:
             self.generate_random_map()
             self.save_map()
 
-    def ready(self, client):
+    def inform(self, msg_type, args):
+        if msg_type == "ready":
+            self.ready()
+        elif msg_type == "overpower":
+            self.overpower(*args)
+
+    def ready(self, client=None):
         if self.winner:
             self.generate_random_map()
             self.update_client_maps()
@@ -62,29 +155,30 @@ class Game:
         assert self.auto_players, "no player position left"
         client_color = self.auto_players.pop(0)
         self._clients[client_color] = client
-        client.inform_colors(client_color, self.player_colors, self.COLORS)
-        client.inform_valid_position_infos(self._q, self._r)
+        client.inform("colors", (client_color, self.player_colors, self.COLORS))
+        client.inform("valid_position_infos", (self._q, self._r))
         self.update_client_maps(client_color)
 
     def update_client_maps(self, color=None):
         for client_color, client in self._clients.items():
             if color and color != client_color:
                 continue
-            client.inform_new_map(self._serialize_map())
+            client.inform("new_map", (self._serialize_map(),))
+
 
     def print_to_all(self, text):
         for client in self._clients.values():
-            client.inform_text(text)
+            client.inform("text", (text,))
 
     def print_to_others(self, color, text):
         for client_color, client in self._clients.items():
             if client_color == color:
                 continue
-            client.inform_text(text)
+            client.inform("text", (text,))
 
     def print_to_color(self, color, text):
         if color in self._clients:
-            self._clients[color].inform_text(text)
+            self._clients[color].inform("text", (text,))
 
     def generate_random_map(self):
         self._tiles = []

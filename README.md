@@ -12,6 +12,7 @@ Requirements
 
 - pygame
 - pyyaml
+- msgpack
 
 
 Install pygame for python3 (Mint/Ubuntu)
@@ -32,6 +33,7 @@ python setup.py build
 python setup.py install
 
 pip install pyyaml
+pip install msgpack-python
 ```
 
 How to start the game

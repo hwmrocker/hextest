@@ -1,5 +1,7 @@
+import asyncio
 import pygame
 import pygame.locals
+import msgpack
 from .popup import Popup
 from .game import Position
 
@@ -21,17 +23,31 @@ class MinimalClienInterface:
 
 class PygameClient(pygame.sprite.Group):
 
-    def __init__(self, game, loop):
+    VALID_INFORM_TYPES = (
+        "colors",
+        "valid_position_infos",
+        "text",
+        "new_map",
+    )
+
+    def __init__(self):
         # pygame.sprite.Group.__init__(self)
         super().__init__()
         self._images = {}
         self._tiles = []
+        self._q = 0
+        self._r = 0
         self.cursor = HexTileSprite(Position(-1, -1), pygame.image.load('tiles/cursor.png'))
         self.popup = Popup()
         self.popup.add("Welcome")
-        self._game = game
-        self._loop = loop
 
+    def inform(self, msg_type, args):
+        if msg_type not in self.VALID_INFORM_TYPES:
+            print("{} is not a valid type".format(msg_type))
+            return False
+
+        getattr(self, "inform_{}".format(msg_type))(*args)
+    
     def inform_colors(self, my_color, player_colors, game_colors):
         self.popup.add("You are %s" % my_color)
         self.color = my_color
@@ -90,6 +106,10 @@ class PygameClient(pygame.sprite.Group):
 
 class LocalClient(PygameClient):
 
+    def __init__(self, game):
+        super().__init__()
+        self._game = game
+
     def on_click(self, position):
         q, r = position.offset
         color_to_overpower = self._tiles[q][r].color
@@ -100,6 +120,71 @@ class LocalClient(PygameClient):
 
     def on_keypress(self, event):
         self._game.ready(self)
+
+
+class NetworkClient(PygameClient):
+
+    reader = None
+    writer = None
+    sockname = None
+
+    def __init__(self, host='127.0.0.1', port=8001):
+        super().__init__()
+        self.host = host
+        self.port = port
+
+    def on_click(self, position):
+        q, r = position.offset
+        color_to_overpower = self._tiles[q][r].color
+        self.send_msg(("overpower", (color_to_overpower,)))
+
+    def on_mouse_move(self, position):
+        self.cursor.update_position(position)
+
+    def on_keypress(self, event):
+        self.send_msg(("ready", (self.sockname,)))
+
+    def send_msg(self, msg):
+        pack = msgpack.packb(msg)
+        self.writer.write(pack)
+
+    def close(self):
+        if self.writer:
+            self.writer.write_eof()
+
+    # @asyncio.coroutine
+    # def create_input(self):
+    #     while True:
+    #         mainloop = asyncio.get_event_loop()
+    #         future = mainloop.run_in_executor(None, watch_stdin)
+    #         input_message = yield from future
+    #         if input_message == 'close()' or not self.writer:
+    #             self.close()
+    #             break
+    #         elif input_message:
+    #             mainloop.call_soon_threadsafe(self.send_msg, input_message)
+
+    @asyncio.coroutine
+    def connect(self):
+        # print('Connecting...')
+        try:
+            reader, writer = yield from asyncio.open_connection(self.host, self.port)
+            # asyncio.async(self.create_input())
+            self.reader = reader
+            self.writer = writer
+            self.sockname = writer.get_extra_info('sockname')
+            unpacker = msgpack.Unpacker(encoding='utf-8')
+            while not reader.at_eof():
+                pack = yield from reader.read(1024)
+                unpacker.feed(pack)
+                for msg in unpacker:
+                    print(repr(msg))
+                    self.inform(*msg)
+            # print('The server closed the connection, press <enter> to exit.')
+            self.writer = None
+        except ConnectionRefusedError as e:
+            # print('Connection refused: {}'.format(e))
+            self.close()
 
 
 class SpectatorClient(PygameClient):
