@@ -1,15 +1,33 @@
+"""helangor.
+
+Usage:
+    game.py
+    game.py [-p PORT | -c SERVER[:PORT]]
+
+Options:
+    -h, --help          show this screen
+    --version           show version
+    -c SERVER[:PORT], --connect SERVER[:PORT]
+                        this will not run a local server, but rather connection
+                        to the provided one.
+    -p PORT, --port PORT
+                        this will change the port of the server that is connected.
+"""
+
+
 import pygame
 import asyncio
 import time
+from docopt import docopt
 from helingor.io import SpectatorClient, LocalClient, NetworkClient
 from helingor.game import Game, Server
 
 
 def draw():
-    if game.player_group.color == "black":
-        screen.fill((0, 0, 0))
-    else:
-        screen.fill((250, 250, 250))
+    # if game.player_group.color == "black":
+    #     screen.fill((0, 0, 0))
+    # else:
+    #     screen.fill((250, 250, 250))
 
     local_client.draw(screen)
     pygame.display.flip()
@@ -43,14 +61,15 @@ def main_loop(loop):
 
 
 if __name__ == "__main__":
+    arguments = docopt(__doc__, version='helingor')
+
     loop = asyncio.get_event_loop()
     pygame.init()
     screen = pygame.display.set_mode((700, 700))
-    game = Game(11, 8, loop=loop)
-    # local_client = LocalClient(game)
-    # game.hookup_client(local_client)
-    gameserver = Server(game)
-    asyncio.async(gameserver.run_server())
+    if not arguments.get('--connect'):
+        game = Game(11, 8, loop=loop)
+        gameserver = Server(game)
+        asyncio.async(gameserver.run_server())
     local_client = NetworkClient()
     asyncio.async(local_client.connect())
     

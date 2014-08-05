@@ -13,6 +13,7 @@ Requirements
 - pygame
 - pyyaml
 - msgpack
+- docopt
 
 
 Install pygame and other depencies for python3 in an virtual env (Mint/Ubuntu)
@@ -34,6 +35,7 @@ python setup.py install
 
 pip install pyyaml
 pip install msgpack-python
+pip install docopt
 ```
 
 How to start the game
