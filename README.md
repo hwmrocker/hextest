@@ -52,6 +52,7 @@ Helpful links
 very interesting blogpost about hexagons. Helped me alot with some aspects.
 
 http://www.redblobgames.com/grids/hexagons/
+
 https://www.youtube.com/watch?v=HyZpCs3i71s&feature=youtu.be&t=18s
 
 License
