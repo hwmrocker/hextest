@@ -26,7 +26,6 @@ class ClientStub:
         self.peername = None
 
     def inform(self, msg_type, args):
-        # print(msg_type)
         self.writer.write(msgpack.packb((msg_type, args)))
 
 class Server:
@@ -54,7 +53,6 @@ class Server:
 
     def send_to_client(self, peername, msg):
         client = self.clients[peername]
-        # print('Sending to {}'.format(peername))
         client.writer.write(msgpack.packb(msg))
         return
 
@@ -64,13 +62,11 @@ class Server:
         return
 
     def close_clients(self):
-        # print('Sending EndOfFile to all clients to close them.')
         for peername, client in self.clients.items():
             client.writer.write_eof()
 
     @asyncio.coroutine
     def client_connected(self, reader, writer):
-        # print('Client connected.')
         peername = writer.transport.get_extra_info('peername')
         new_client = ClientStub(reader, writer)
         self.game.hookup_client(new_client)
@@ -83,18 +79,8 @@ class Server:
                 unpacker.feed(pack)
                 for msg in unpacker:
                     self.game.inform(*msg, from_color=new_client.color)
-                    # if msg:
-                    #     msg = msg.decode().strip()
-                    #     # print('Server Received: "{}"'.format(msg))
-                    #     if not msg == 'close()':
-                    #         self.send_to_all_clients(msg)
-                    #     else:
-                    #         # print('User {} disconnected'.format(peername))
-                    #         del self.clients[peername]
-                    #         self.send_to_all_clients('User disconnected')
-                    #         writer.write_eof()
             except ConnectionResetError as e:
-                # print('ERROR: {}'.format(e))
+                print('ERROR: {}'.format(e))
                 del self.clients[peername]
                 return
 
@@ -122,7 +108,7 @@ class Game:
         "yellow"
     ]
 
-    def __init__(self, x=None, y=None, filename=None, loop=None):
+    def __init__(self, x=None, y=None, filename=None):
         assert x and y or filename
         self._q = x
         self._r = y
@@ -131,7 +117,7 @@ class Game:
         self._clients = {}
         self._tiles = []
         self.winner = None
-        self._loop = loop
+        self.loop = asyncio.get_event_loop()
         if filename:
             self.load_map(filename)
             if x and y:
@@ -165,7 +151,7 @@ class Game:
         for client_color, client in self._clients.items():
             if color and color != client_color:
                 continue
-            client.inform("new_map", (self._serialize_map(),))
+            client.inform("new_map", (self._serialize_map(), self.player_group.color))
 
 
     def print_to_all(self, text):
@@ -295,6 +281,10 @@ class Game:
         self.player_group = next(self.iter_player_groups)
         self.update_client_maps()
 
+        if self.player_group.color == "black":
+            # it is blacks turn again, everyone made a move, we lock this game again
+            self.winner = False
+
         print("Black: %s\nWhite: %s\n\n" % (
             len(self.black_group.tiles),
             len(self.white_group.tiles))
@@ -321,8 +311,8 @@ class Game:
         else:
             print("turn for %s" % self.player_group.color)
             if self.player_group.color in self.auto_players:
-            # it is auto players turn
-                self._loop.call_later(0.5, self.auto_player)
+                # it is auto players turn
+                self.loop.call_later(0.2, self.auto_player)
 
     def auto_player(self):
         """

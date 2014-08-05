@@ -60,7 +60,8 @@ class PygameClient(pygame.sprite.Group):
     def inform_text(self, text):
         self.popup.add(text)
 
-    def inform_new_map(self, new_map):
+    def inform_new_map(self, new_map, player_color):
+        self.player_color = player_color
         self.empty()
         self._tiles = []
         self._q = len(new_map)
@@ -78,6 +79,10 @@ class PygameClient(pygame.sprite.Group):
         return 0 <= q < self._q and 0 <= r < self._r
 
     def draw(self, screen):
+        if self.player_color == "black":
+            screen.fill((0, 0, 0))
+        else:
+            screen.fill((250, 250, 250))
         pygame.sprite.Group.draw(self, screen)
         screen.blit(self.cursor.image, self.cursor.rect.topleft)
         self.popup.draw(screen)
@@ -152,21 +157,9 @@ class NetworkClient(PygameClient):
         if self.writer:
             self.writer.write_eof()
 
-    # @asyncio.coroutine
-    # def create_input(self):
-    #     while True:
-    #         mainloop = asyncio.get_event_loop()
-    #         future = mainloop.run_in_executor(None, watch_stdin)
-    #         input_message = yield from future
-    #         if input_message == 'close()' or not self.writer:
-    #             self.close()
-    #             break
-    #         elif input_message:
-    #             mainloop.call_soon_threadsafe(self.send_msg, input_message)
-
     @asyncio.coroutine
     def connect(self):
-        # print('Connecting...')
+        print('Connecting...')
         try:
             reader, writer = yield from asyncio.open_connection(self.host, self.port)
             # asyncio.async(self.create_input())
@@ -178,12 +171,11 @@ class NetworkClient(PygameClient):
                 pack = yield from reader.read(1024)
                 unpacker.feed(pack)
                 for msg in unpacker:
-                    print(repr(msg))
                     self.inform(*msg)
-            # print('The server closed the connection, press <enter> to exit.')
+            print('The server closed the connection')
             self.writer = None
         except ConnectionRefusedError as e:
-            # print('Connection refused: {}'.format(e))
+            print('Connection refused: {}'.format(e))
             self.close()
 
 

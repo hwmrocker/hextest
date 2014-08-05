@@ -65,7 +65,7 @@ if __name__ == "__main__":
     pygame.init()
     screen = pygame.display.set_mode((700, 700))
     if not arguments.get('--connect'):
-        game = Game(11, 8, loop=loop)
+        game = Game(11, 8)
         gameserver = Server(game)
         asyncio.async(gameserver.run_server())
 
