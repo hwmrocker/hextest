@@ -2,16 +2,14 @@
 
 Usage:
     game.py
-    game.py [-p PORT | -c SERVER[:PORT]]
+    game.py [-p PORT | -c SERVER]
 
 Options:
     -h, --help          show this screen
     --version           show version
-    -c SERVER[:PORT], --connect SERVER[:PORT]
+    -c SERVER, --connect SERVER
                         this will not run a local server, but rather connection
                         to the provided one.
-    -p PORT, --port PORT
-                        this will change the port of the server that is connected.
 """
 
 
@@ -70,7 +68,8 @@ if __name__ == "__main__":
         game = Game(11, 8, loop=loop)
         gameserver = Server(game)
         asyncio.async(gameserver.run_server())
-    local_client = NetworkClient()
+
+    local_client = NetworkClient(host=arguments.get('--connect','localhost'))
     asyncio.async(local_client.connect())
     
     try:

@@ -38,7 +38,7 @@ class Server:
     clients = {}
     server = None
 
-    def __init__(self, game, host='127.0.0.1', port=8001):
+    def __init__(self, game, host='*', port=8001):
         self.game = game
         self.host = host
         self.port = port
