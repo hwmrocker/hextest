@@ -19,8 +19,8 @@ import pygame
 import asyncio
 import time
 from docopt import docopt
-from helingor.io import SpectatorClient, LocalClient, NetworkClient
-from helingor.game import Game, Server
+from helangor.io import SpectatorClient, LocalClient, NetworkClient
+from helangor.game import Game, Server
 
 
 def draw():
@@ -61,7 +61,7 @@ def main_loop(loop):
 
 
 if __name__ == "__main__":
-    arguments = docopt(__doc__, version='helingor')
+    arguments = docopt(__doc__, version='helangor 0.8')
 
     loop = asyncio.get_event_loop()
     pygame.init()
