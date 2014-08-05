@@ -15,8 +15,8 @@ Requirements
 - msgpack
 
 
-Install pygame for python3 (Mint/Ubuntu)
-----------------------------------------
+Install pygame and other depencies for python3 in an virtual env (Mint/Ubuntu)
+------------------------------------------------------------------------------
 
 ```bash
 virtualenv -p python3 py3
