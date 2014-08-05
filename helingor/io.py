@@ -4,7 +4,22 @@ from .popup import Popup
 from .game import Position
 
 
-class LocalClient(pygame.sprite.Group):
+class MinimalClienInterface:
+
+    def inform_colors(self, my_color, player_colors, game_colors):
+        raise NotImplemented()
+
+    def inform_valid_position_infos(self, q, r):
+        raise NotImplemented()
+
+    def inform_text(self, text):
+        raise NotImplemented()
+
+    def inform_new_map(self, new_map):
+        raise NotImplemented()
+
+
+class PygameClient(pygame.sprite.Group):
 
     def __init__(self, game, loop):
         # pygame.sprite.Group.__init__(self)
@@ -64,6 +79,18 @@ class LocalClient(pygame.sprite.Group):
         return self.on_mouse_move(position)
 
     def on_click(self, position):
+        pass
+
+    def on_mouse_move(self, position):
+        pass
+
+    def on_keypress(self, event):
+        pass
+
+
+class LocalClient(PygameClient):
+
+    def on_click(self, position):
         q, r = position.offset
         color_to_overpower = self._tiles[q][r].color
         self._game.overpower(color_to_overpower)
@@ -75,7 +102,14 @@ class LocalClient(pygame.sprite.Group):
         self._game.ready(self)
 
 
+class SpectatorClient(PygameClient):
+
+    def on_mouse_move(self, position):
+        self.cursor.update_position(position)
+
+
 class HexTileSprite(pygame.sprite.Sprite):
+
     def __init__(self, position, image, color=None):
         super().__init__()
         self.image = image

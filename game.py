@@ -1,7 +1,7 @@
 import pygame
 import asyncio
 import time
-from helingor.io import LocalClient
+from helingor.io import SpectatorClient, LocalClient
 from helingor.game import Game
 
 
@@ -41,6 +41,32 @@ def main_loop(loop):
         # DRAWING
         draw()
 
+
+@asyncio.coroutine
+def start_server():
+    yield from asyncio.start_server(handle_clients, 'localhost', 8001)
+    yield from asyncio.start_server(handle_spectators, 'localhost', 8002)
+
+
+@asyncio.coroutine
+def handle_spectators(reader, writer):
+    while True:
+        yield from asyncio.sleep(10)
+
+
+@asyncio.coroutine
+def handle_clients(reader, writer):
+    data = ""
+    while True:
+        fake_client = FakeClient()
+        for packet in fake_client.flush():
+            writer.write(packet)
+        # if reader.data_received()
+        data += yield from reader.read()
+        for packet in consume(data):
+            fake_client.inform(packet)
+        yield from asyncio.sleep(0.1)
+
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     pygame.init()
@@ -52,5 +78,6 @@ if __name__ == "__main__":
 
     try:
         loop.run_until_complete(main_loop(loop))
+        loop.run_until_complete(start_server())
     finally:
         loop.close()
