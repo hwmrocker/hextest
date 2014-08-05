@@ -82,7 +82,7 @@ class Server:
                 pack = yield from reader.read(1024)
                 unpacker.feed(pack)
                 for msg in unpacker:
-                    self.game.inform(*msg)
+                    self.game.inform(*msg, from_color=new_client.color)
                     # if msg:
                     #     msg = msg.decode().strip()
                     #     # print('Server Received: "{}"'.format(msg))
@@ -140,11 +140,12 @@ class Game:
             self.generate_random_map()
             self.save_map()
 
-    def inform(self, msg_type, args):
+    def inform(self, msg_type, args, from_color):
         if msg_type == "ready":
             self.ready()
         elif msg_type == "overpower":
-            self.overpower(*args)
+            if from_color == self.player_group.color:
+                self.overpower(*args)
 
     def ready(self, client=None):
         if self.winner:
@@ -155,6 +156,7 @@ class Game:
         assert self.auto_players, "no player position left"
         client_color = self.auto_players.pop(0)
         self._clients[client_color] = client
+        client.color = client_color
         client.inform("colors", (client_color, self.player_colors, self.COLORS))
         client.inform("valid_position_infos", (self._q, self._r))
         self.update_client_maps(client_color)
