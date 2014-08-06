@@ -70,12 +70,13 @@ class PygameClient(pygame.sprite.Group):
         self._tiles = []
         self._q = 0
         self._r = 0
-        self._x_offset = 15
-        self._y_offset = 15
+        self._x_offset = 10
+        self._y_offset = 10
         self.TranslatedPosition = translated_position_factory(self._x_offset, self._y_offset)
         self.cursor = HexTileSprite(self.TranslatedPosition(-1, -1), pygame.image.load('tiles/cursor.png'))
         self.popup = Popup()
         self.popup.add("Welcome")
+        self.font = pygame.font.Font("fonts/ArmWrestler.ttf", 30)
 
     @property
     def _offset(self):
@@ -127,8 +128,18 @@ class PygameClient(pygame.sprite.Group):
             screen.fill((0, 0, 0))
         else:
             screen.fill((250, 250, 250))
+        pygame.draw.rect(screen, (250, 0, 0), (5, 5, 690, 690), 1)
         pygame.sprite.Group.draw(self, screen)
         screen.blit(self.cursor.image, self.cursor.rect.topleft)
+        # draw menu
+        pygame.draw.rect(screen, (50, 50, 50), (700, 0, 200, 700))
+        white_points = sum(1 for col in self._tiles for t in col if t.color == "white")
+        black_points = sum(1 for col in self._tiles for t in col if t.color == "black")
+        other_points = self._q * self._r - (white_points + black_points)
+        screen.blit(self.font.render(str(white_points), 1, (255, 255, 255)), (750, 50))
+        screen.blit(self.font.render(str(other_points), 1, (0, 100, 100)), (750, 300))
+        screen.blit(self.font.render(str(black_points), 1, (0, 0, 0)), (750, 600))
+
         self.popup.draw(screen)
 
     def on_raw_click(self, x, y):
