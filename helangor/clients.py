@@ -20,6 +20,39 @@ class MinimalClienInterface:
     def inform_new_map(self, new_map):
         raise NotImplemented()
 
+def translated_position_factory(x_offset=0, y_offset=0):
+
+    TILE_WIDTH = TILE_HEIGHT = 80
+
+    EVEN_COL_DISTANCE = 0
+    ODD_COL_DISTANCE = TILE_HEIGHT // 2
+
+    # we use flat topped hexagons
+    COL_WIDTH = (TILE_WIDTH // 4) * 3
+    ROW_HEIGHT = TILE_HEIGHT
+
+    class TranslatedPosition(Position):
+
+        def __init__(self, q=None, r=None, x=None, y=None, z=None):
+            super().__init__(q=q, r=r, x=x, y=y, z=z)
+
+        @property
+        def topleft(self):
+            q, r = self.offset
+            return q * COL_WIDTH + x_offset, (r * ROW_HEIGHT) + y_offset + \
+                (ODD_COL_DISTANCE if (q % 2 == 1) else EVEN_COL_DISTANCE)
+
+        @topleft.setter
+        def topleft(self, value):
+            # we will make an rounding error here!
+            x, y = value
+            x, y = x - x_offset, y - y_offset
+            column = (x // COL_WIDTH)
+            delta = ODD_COL_DISTANCE if column % 2 == 1 else EVEN_COL_DISTANCE
+            row = ((y - delta) // ROW_HEIGHT)
+            self.offset = column, row
+
+    return TranslatedPosition
 
 class PygameClient(pygame.sprite.Group):
 
@@ -37,9 +70,20 @@ class PygameClient(pygame.sprite.Group):
         self._tiles = []
         self._q = 0
         self._r = 0
-        self.cursor = HexTileSprite(Position(-1, -1), pygame.image.load('tiles/cursor.png'))
+        self._x_offset = 15
+        self._y_offset = 15
+        self.TranslatedPosition = translated_position_factory(self._x_offset, self._y_offset)
+        self.cursor = HexTileSprite(self.TranslatedPosition(-1, -1), pygame.image.load('tiles/cursor.png'))
         self.popup = Popup()
         self.popup.add("Welcome")
+
+    @property
+    def _offset(self):
+        return self._x_offset, self._y_offset
+
+    @_offset.setter
+    def _offset(self, value):
+        self._x_offset, self._y_offset = value
 
     def inform(self, msg_type, args):
         if msg_type not in self.VALID_INFORM_TYPES:
@@ -69,7 +113,7 @@ class PygameClient(pygame.sprite.Group):
         for i, col_info in enumerate(new_map):
             col = []
             for j, color in enumerate(col_info):
-                t = HexTileSprite(Position(i, j), self._images[color], color)
+                t = HexTileSprite(self.TranslatedPosition(i, j), self._images[color], color)
                 col.append(t)
                 self.add(t)
             self._tiles.append(col)
@@ -88,13 +132,13 @@ class PygameClient(pygame.sprite.Group):
         self.popup.draw(screen)
 
     def on_raw_click(self, x, y):
-        position = Position(x=x, y=y)
+        position = self.TranslatedPosition(x=(x - self._x_offset), y=(y - self._y_offset))
         if not self._is_position_valid(position):
             return
         return self.on_click(position)
 
     def on_raw_mouse_move(self, x, y):
-        position = Position(x=x, y=y)
+        position = self.TranslatedPosition(x=(x - self._x_offset), y=(y - self._y_offset))
         if not self._is_position_valid(position):
             return
         return self.on_mouse_move(position)

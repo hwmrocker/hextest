@@ -6,16 +6,6 @@ from collections import Counter, namedtuple
 import yaml
 
 
-TILE_WIDTH = TILE_HEIGHT = 80
-
-EVEN_COL_DISTANCE = 0
-ODD_COL_DISTANCE = TILE_HEIGHT // 2
-
-# we use flat topped hexagons
-COL_WIDTH = (TILE_WIDTH // 4) * 3
-ROW_HEIGHT = TILE_HEIGHT
-
-
 Client = namedtuple('Client', 'reader writer')
 class ClientStub:
 
@@ -435,21 +425,6 @@ class Position(object):
     def axial(self, value):
         x, z = value
         self.cube = x, -x - z, z
-
-    @property
-    def topleft(self):
-        q, r = self.offset
-        return q * COL_WIDTH, (r * ROW_HEIGHT) + \
-            (ODD_COL_DISTANCE if (q % 2 == 1) else EVEN_COL_DISTANCE)
-
-    @topleft.setter
-    def topleft(self, value):
-        # we will make an rounding error here!
-        x, y = value
-        column = (x // COL_WIDTH)
-        delta = ODD_COL_DISTANCE if column % 2 == 1 else EVEN_COL_DISTANCE
-        row = ((y - delta) // ROW_HEIGHT)
-        self.offset = column, row
 
     @property
     def neighbours(self):

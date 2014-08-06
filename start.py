@@ -17,7 +17,7 @@ import pygame
 import asyncio
 import time
 from docopt import docopt
-from helangor.io import SpectatorClient, LocalClient, NetworkClient
+from helangor.clients import SpectatorClient, LocalClient, NetworkClient
 from helangor.game import Game, Server
 
 
