@@ -43,7 +43,7 @@ How to start the game
 
 ```bash
 . ./py3/bin/activate
-python3 game.py
+python3 start.py
 ```
 
 Helpful links
