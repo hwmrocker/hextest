@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
     local_client = NetworkClient(host=arguments.get('--connect','localhost'))
     asyncio.async(local_client.connect())
-    
+
     try:
         loop.run_until_complete(main_loop(loop))
     finally:
