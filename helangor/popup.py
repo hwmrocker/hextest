@@ -26,6 +26,7 @@ class Popup(object):
         self.color = kwargs.get("fontcolor", (245, 101, 44))  # orange ;)
         self.background_color = kwargs.get("background_color", (123, 123, 0))
         self.line_height_ratio = kwargs.get("line_height_ratio", 1.2)
+        self.padding = kwargs.get("padding", 30)
         self.popups = []
         self.default_duration = 3
 
@@ -68,8 +69,8 @@ class Popup(object):
                 total_height += self.line_height_ratio * height
 
             # add a little bit vertical space before and after the text
-            total_height += (self.line_height_ratio - 1) * total_height
-
+            total_height += self.padding
+            max_width += self.padding
             # draw the background
             pygame.draw.rect(
                 screen,

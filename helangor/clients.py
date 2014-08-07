@@ -77,6 +77,7 @@ class PygameClient(pygame.sprite.Group):
         self.popup = Popup()
         self.popup.add("Welcome")
         self.font = pygame.font.Font("fonts/ArmWrestler.ttf", 30)
+        self.player_color = "black"
 
     @property
     def _offset(self):
@@ -133,11 +134,20 @@ class PygameClient(pygame.sprite.Group):
         screen.blit(self.cursor.image, self.cursor.rect.topleft)
         # draw menu
         pygame.draw.rect(screen, (50, 50, 50), (700, 0, 200, 700))
+        total_tiles = self._q * self._r
         white_points = sum(1 for col in self._tiles for t in col if t.color == "white")
         black_points = sum(1 for col in self._tiles for t in col if t.color == "black")
-        other_points = self._q * self._r - (white_points + black_points)
+        other_points = total_tiles - (white_points + black_points)
+
+        white_pixels = white_points / total_tiles * 700
+        black_pixels = black_points / total_tiles * 700
+
+        pygame.draw.rect(screen, (0, 100, 100), (730, 0, 10, 700))
+        pygame.draw.rect(screen, (255, 255, 255), (730, 0, 10, white_pixels))
+        pygame.draw.rect(screen, (0, 0, 0), (730, 700 - black_pixels, 10, black_pixels))
+        pygame.draw.rect(screen, (250, 0, 0), (720, 350, 30, 2), 1)
         screen.blit(self.font.render(str(white_points), 1, (255, 255, 255)), (750, 50))
-        screen.blit(self.font.render(str(other_points), 1, (0, 100, 100)), (750, 300))
+        screen.blit(self.font.render(str(other_points), 1, (0, 100, 100)), (750, 335))
         screen.blit(self.font.render(str(black_points), 1, (0, 0, 0)), (750, 600))
 
         self.popup.draw(screen)
