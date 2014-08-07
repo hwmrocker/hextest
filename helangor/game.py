@@ -80,10 +80,7 @@ class Server:
 class Game:
 
     """
-    Clients will call:
-    hookup_client
-    overpower
-    ready
+    Clients should only call inform()
     """
     COLORS = [
         "black",
