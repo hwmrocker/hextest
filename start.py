@@ -39,15 +39,7 @@ def main_loop(loop):
         for event in pygame.event.get():
             if event.type == pygame.locals.QUIT:
                 return
-            elif event.type == pygame.locals.KEYDOWN:
-                if event.key == pygame.locals.K_ESCAPE:
-                    return
-                local_client.on_keypress(event)
-
-            elif event.type == pygame.locals.MOUSEMOTION:
-                local_client.on_raw_mouse_move(event.pos[0], event.pos[1])
-            elif event.type == pygame.locals.MOUSEBUTTONDOWN:
-                local_client.on_raw_click(event.pos[0], event.pos[1])
+            local_client.handle_event(event)
 
         # DRAWING
         draw()
@@ -65,7 +57,7 @@ if __name__ == "__main__":
         asyncio.async(gameserver.run_server())
 
     local_client = NetworkClient(host=arguments.get('--connect','localhost'))
-    asyncio.async(local_client.connect())
+    # asyncio.async(local_client.connect())
 
     try:
         loop.run_until_complete(main_loop(loop))

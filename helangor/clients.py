@@ -159,6 +159,17 @@ class PygameClient(pygame.sprite.Group):
                 self.add(t)
             self._tiles.append(col)
 
+    def handle_event(self, event):
+        if event.type == pygame.locals.KEYDOWN:
+            if event.key == pygame.locals.K_ESCAPE:
+                return
+            self.on_keypress(event)
+
+        elif event.type == pygame.locals.MOUSEMOTION:
+            self.on_raw_mouse_move(event.pos[0], event.pos[1])
+        elif event.type == pygame.locals.MOUSEBUTTONDOWN:
+            self.on_raw_click(event.pos[0], event.pos[1])
+
     def _is_position_valid(self, position):
         q, r = position.offset
         return 0 <= q < self._q and 0 <= r < self._r
@@ -243,7 +254,9 @@ class NetworkClient(PygameClient):
         super().__init__()
         self.host = host
         self.port = port
-
+        self.reader = None
+        self.writer = None
+            
     def on_click(self, position):
         q, r = position.offset
         color_to_overpower = self._tiles[q][r].color
@@ -254,6 +267,13 @@ class NetworkClient(PygameClient):
         self.cursor.update_position(position)
 
     def on_keypress(self, event):
+        if not self.writer:
+            # loop = asyncio.get_event_loop()
+            print("lets connect")
+            # loop.run_until_complete(self.connect())
+            asyncio.async(self.connect())
+            
+            return
         self.send_msg(("ready", (self.sockname,)))
 
     def send_msg(self, msg):
