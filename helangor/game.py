@@ -82,25 +82,14 @@ class Game:
     """
     Clients should only call inform()
     """
-    COLORS = [
-        "black",
-        "white",
-        "brown",
-        "darkblue",
-        "darkgreen",
-        "grey",
-        "lightblue",
-        "lightgreen",
-        "red",
-        "yellow"
-    ]
+    COLORS = list(range(10))
 
     def __init__(self, x=None, y=None, filename=None):
         assert x and y or filename
         self._q = x
         self._r = y
-        self.player_colors = ["black", "white"]
-        self.auto_players = ["black", "white"]
+        self.player_colors = self.COLORS[:2]
+        self.auto_players = self.COLORS[:2]
         self._clients = {}
         self._tiles = []
         self.winner = None
@@ -160,7 +149,7 @@ class Game:
         for i in range(self._q):
             col = []
             for j in range(self._r):
-                rand_col = random.choice(self.COLORS[2:])
+                rand_col = random.choice(self.COLORS[len(self.player_colors):])
                 t = HexTile(Position(i, j), rand_col)
                 col.append(t)
             self._tiles.append(col)
@@ -168,8 +157,8 @@ class Game:
         self.generate_neighbour_links()
 
     def generate_neighbour_links(self):
-        self.black_group = Group(tiles=[self._tiles[0][-1]], color="black")
-        self.white_group = Group(tiles=[self._tiles[-1][0]], color="white")
+        self.black_group = Group(tiles=[self._tiles[0][-1]], color=self.player_colors[0])
+        self.white_group = Group(tiles=[self._tiles[-1][0]], color=self.player_colors[1])
         self.player_groups = [self.black_group, self.white_group]
         self.iter_player_groups = cycle([self.black_group, self.white_group])
         self.player_group = next(self.iter_player_groups)
@@ -268,7 +257,7 @@ class Game:
         self.player_group = next(self.iter_player_groups)
         self.update_client_maps()
 
-        if self.player_group.color == "black":
+        if self.player_group.color == self.player_colors[0]:
             # it is blacks turn again, everyone made a move, we lock this game again
             self.winner = False
 

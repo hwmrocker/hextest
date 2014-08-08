@@ -22,11 +22,6 @@ from helangor.game import Game, Server
 
 
 def draw():
-    # if game.player_group.color == "black":
-    #     screen.fill((0, 0, 0))
-    # else:
-    #     screen.fill((250, 250, 250))
-
     local_client.draw(screen)
     pygame.display.flip()
 

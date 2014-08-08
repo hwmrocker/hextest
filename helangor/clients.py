@@ -2,6 +2,7 @@ import asyncio
 import pygame
 import pygame.locals
 import msgpack
+from math import sqrt
 from .popup import Popup
 from .game import Position
 
@@ -24,11 +25,14 @@ def translated_position_factory(x_offset=0, y_offset=0):
 
     TILE_WIDTH = TILE_HEIGHT = 80
 
+    HALF_HEIGHT = TILE_HEIGHT // 2
+
     EVEN_COL_DISTANCE = 0
-    ODD_COL_DISTANCE = TILE_HEIGHT // 2
+    ODD_COL_DISTANCE = HALF_HEIGHT
 
     # we use flat topped hexagons
     COL_WIDTH = (TILE_WIDTH // 4) * 3
+    COL_OVERLAP = TILE_WIDTH - COL_WIDTH
     ROW_HEIGHT = TILE_HEIGHT
 
     class TranslatedPosition(Position):
@@ -46,11 +50,31 @@ def translated_position_factory(x_offset=0, y_offset=0):
         def topleft(self, value):
             # we will make an rounding error here!
             x, y = value
-            x, y = x - x_offset, y - y_offset
-            column = (x // COL_WIDTH)
+            _x, _y = x - x_offset, y - y_offset
+            column, column_reminder = divmod(x,  COL_WIDTH)
             delta = ODD_COL_DISTANCE if column % 2 == 1 else EVEN_COL_DISTANCE
-            row = ((y - delta) // ROW_HEIGHT)
+            row, row_remainder = divmod((y - delta), ROW_HEIGHT)
             self.offset = column, row
+
+            if (column_reminder < COL_OVERLAP):
+                # we need to check better
+                normalized_y = (row_remainder - HALF_HEIGHT) / HALF_HEIGHT
+                normalized_x = column_reminder / COL_OVERLAP
+                qx, qy, qz = self.cube
+                if normalized_x >= abs(normalized_y):
+                    # we are safe
+                    pass
+                elif -normalized_y > normalized_x:
+                        self.cube = qx - 1, qy + 1, qz
+                elif normalized_y > normalized_x:
+                        self.cube = qx - 1, qy, qz + 1
+
+            
+            # q = int(x / COL_WIDTH)
+            # r = int((1/3*sqrt(3) * y - 1/3 * x) / sqrt(COL_WIDTH**2 + (TILE_HEIGHT/2)**2))
+            # self.axial = q, r
+            # sqrt(COL_WIDTH**2 + (TILE_HEIGHT/2)**2)
+
 
     return TranslatedPosition
 
@@ -62,6 +86,19 @@ class PygameClient(pygame.sprite.Group):
         "text",
         "new_map",
     )
+
+    COLORS = [
+        "black",
+        "white",
+        "brown",
+        "darkblue",
+        "darkgreen",
+        "grey",
+        "lightblue",
+        "lightgreen",
+        "red",
+        "yellow"
+    ]
 
     def __init__(self):
         # pygame.sprite.Group.__init__(self)
@@ -97,7 +134,8 @@ class PygameClient(pygame.sprite.Group):
     def inform_colors(self, my_color, player_colors, game_colors):
         self.popup.add("You are %s" % my_color)
         self.color = my_color
-        self._images = dict((color, pygame.image.load('tiles/%s.png' % color)) for color in game_colors)
+        self._images = dict((self.COLORS[color_idx], pygame.image.load('tiles/%s.png' % self.COLORS[color_idx])) \
+            for color_idx in game_colors)
 
     def inform_valid_position_infos(self, q, r):
         self._q = q
@@ -114,7 +152,8 @@ class PygameClient(pygame.sprite.Group):
         self._r = len(new_map[0])
         for i, col_info in enumerate(new_map):
             col = []
-            for j, color in enumerate(col_info):
+            for j, color_idx in enumerate(col_info):
+                color = self.COLORS[color_idx]
                 t = HexTileSprite(self.TranslatedPosition(i, j), self._images[color], color)
                 col.append(t)
                 self.add(t)
@@ -135,6 +174,8 @@ class PygameClient(pygame.sprite.Group):
         # draw menu
         pygame.draw.rect(screen, (50, 50, 50), (700, 0, 200, 700))
         total_tiles = self._q * self._r
+        if not total_tiles:
+            return
         white_points = sum(1 for col in self._tiles for t in col if t.color == "white")
         black_points = sum(1 for col in self._tiles for t in col if t.color == "black")
         other_points = total_tiles - (white_points + black_points)
@@ -205,7 +246,8 @@ class NetworkClient(PygameClient):
 
     def on_click(self, position):
         q, r = position.offset
-        color_to_overpower = self._tiles[q][r].color
+        color_to_overpower = self.COLORS.index(self._tiles[q][r].color)
+
         self.send_msg(("overpower", (color_to_overpower,)))
 
     def on_mouse_move(self, position):
