@@ -114,7 +114,8 @@ class PygameClient(pygame.sprite.Group):
         self.popup = Popup()
         self.popup.add("Welcome")
         self.font = pygame.font.Font("fonts/ArmWrestler.ttf", 30)
-        self.player_color = "black"
+        self.player_color = None
+        self._images = dict((idx, pygame.image.load('tiles/%s.png' % color)) for idx,color in enumerate(self.COLORS))
 
     @property
     def _offset(self):
@@ -134,8 +135,7 @@ class PygameClient(pygame.sprite.Group):
     def inform_colors(self, my_color, player_colors, game_colors):
         self.popup.add("You are %s" % my_color)
         self.color = my_color
-        self._images = dict((self.COLORS[color_idx], pygame.image.load('tiles/%s.png' % self.COLORS[color_idx])) \
-            for color_idx in game_colors)
+        assert len(game_colors) <= len(self.COLORS)
 
     def inform_valid_position_infos(self, q, r):
         self._q = q
@@ -153,8 +153,8 @@ class PygameClient(pygame.sprite.Group):
         for i, col_info in enumerate(new_map):
             col = []
             for j, color_idx in enumerate(col_info):
-                color = self.COLORS[color_idx]
-                t = HexTileSprite(self.TranslatedPosition(i, j), self._images[color], color)
+                # color = self.COLORS[color_idx]
+                t = HexTileSprite(self.TranslatedPosition(i, j), self._images[color_idx], color_idx)
                 col.append(t)
                 self.add(t)
             self._tiles.append(col)
@@ -164,7 +164,7 @@ class PygameClient(pygame.sprite.Group):
         return 0 <= q < self._q and 0 <= r < self._r
 
     def draw(self, screen):
-        if self.player_color == "black":
+        if self.player_color == 0: # TODO: FIXME black
             screen.fill((0, 0, 0))
         else:
             screen.fill((250, 250, 250))
@@ -176,8 +176,8 @@ class PygameClient(pygame.sprite.Group):
         total_tiles = self._q * self._r
         if not total_tiles:
             return
-        white_points = sum(1 for col in self._tiles for t in col if t.color == "white")
-        black_points = sum(1 for col in self._tiles for t in col if t.color == "black")
+        white_points = sum(1 for col in self._tiles for t in col if t.color == 1) # TODO: FIXME white
+        black_points = sum(1 for col in self._tiles for t in col if t.color == 0) # TODO: FIXME black
         other_points = total_tiles - (white_points + black_points)
 
         white_pixels = white_points / total_tiles * 700
@@ -246,7 +246,7 @@ class NetworkClient(PygameClient):
 
     def on_click(self, position):
         q, r = position.offset
-        color_to_overpower = self.COLORS.index(self._tiles[q][r].color)
+        color_to_overpower = self._tiles[q][r].color
 
         self.send_msg(("overpower", (color_to_overpower,)))
 
