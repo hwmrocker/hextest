@@ -185,22 +185,21 @@ class PygameClient(pygame.sprite.Group):
         # draw menu
         pygame.draw.rect(screen, (50, 50, 50), (700, 0, 200, 700))
         total_tiles = self._q * self._r
-        if not total_tiles:
-            return
-        white_points = sum(1 for col in self._tiles for t in col if t.color == 1) # TODO: FIXME white
-        black_points = sum(1 for col in self._tiles for t in col if t.color == 0) # TODO: FIXME black
-        other_points = total_tiles - (white_points + black_points)
+        if total_tiles:
+            white_points = sum(1 for col in self._tiles for t in col if t.color == 1) # TODO: FIXME white
+            black_points = sum(1 for col in self._tiles for t in col if t.color == 0) # TODO: FIXME black
+            other_points = total_tiles - (white_points + black_points)
 
-        white_pixels = white_points / total_tiles * 700
-        black_pixels = black_points / total_tiles * 700
+            white_pixels = white_points / total_tiles * 700
+            black_pixels = black_points / total_tiles * 700
 
-        pygame.draw.rect(screen, (0, 100, 100), (730, 0, 10, 700))
-        pygame.draw.rect(screen, (255, 255, 255), (730, 0, 10, white_pixels))
-        pygame.draw.rect(screen, (0, 0, 0), (730, 700 - black_pixels, 10, black_pixels))
-        pygame.draw.rect(screen, (250, 0, 0), (720, 350, 30, 2), 1)
-        screen.blit(self.font.render(str(white_points), 1, (255, 255, 255)), (750, 50))
-        screen.blit(self.font.render(str(other_points), 1, (0, 100, 100)), (750, 335))
-        screen.blit(self.font.render(str(black_points), 1, (0, 0, 0)), (750, 600))
+            pygame.draw.rect(screen, (0, 100, 100), (730, 0, 10, 700))
+            pygame.draw.rect(screen, (255, 255, 255), (730, 0, 10, white_pixels))
+            pygame.draw.rect(screen, (0, 0, 0), (730, 700 - black_pixels, 10, black_pixels))
+            pygame.draw.rect(screen, (250, 0, 0), (720, 350, 30, 2), 1)
+            screen.blit(self.font.render(str(white_points), 1, (255, 255, 255)), (750, 50))
+            screen.blit(self.font.render(str(other_points), 1, (0, 100, 100)), (750, 335))
+            screen.blit(self.font.render(str(black_points), 1, (0, 0, 0)), (750, 600))
 
         self.popup.draw(screen)
 
@@ -256,6 +255,7 @@ class NetworkClient(PygameClient):
         self.port = port
         self.reader = None
         self.writer = None
+        self.popup.add("Press any key to connect")
             
     def on_click(self, position):
         q, r = position.offset
@@ -268,9 +268,7 @@ class NetworkClient(PygameClient):
 
     def on_keypress(self, event):
         if not self.writer:
-            # loop = asyncio.get_event_loop()
             print("lets connect")
-            # loop.run_until_complete(self.connect())
             asyncio.async(self.connect())
             
             return
