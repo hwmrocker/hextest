@@ -21,6 +21,7 @@ class MinimalClienInterface:
     def inform_new_map(self, new_map):
         raise NotImplemented()
 
+
 def translated_position_factory(x_offset=0, y_offset=0):
 
     TILE_WIDTH = TILE_HEIGHT = 80
@@ -78,6 +79,7 @@ def translated_position_factory(x_offset=0, y_offset=0):
 
     return TranslatedPosition
 
+
 class PygameClient(pygame.sprite.Group):
 
     VALID_INFORM_TYPES = (
@@ -131,7 +133,7 @@ class PygameClient(pygame.sprite.Group):
             return False
 
         getattr(self, "inform_{}".format(msg_type))(*args)
-    
+
     def inform_colors(self, my_color, player_colors, game_colors):
         self.popup.add("You are %s" % my_color)
         self.color = my_color

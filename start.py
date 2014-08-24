@@ -56,7 +56,7 @@ if __name__ == "__main__":
         gameserver = Server(game)
         asyncio.async(gameserver.run_server())
 
-    local_client = NetworkClient(host=arguments.get('--connect','localhost'))
+    local_client = NetworkClient(host=arguments.get('--connect', 'localhost'))
     # asyncio.async(local_client.connect())
 
     try:
