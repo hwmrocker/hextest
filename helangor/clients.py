@@ -66,17 +66,14 @@ def translated_position_factory(x_offset=0, y_offset=0):
                     # we are safe
                     pass
                 elif -normalized_y > normalized_x:
-                        self.cube = qx - 1, qy + 1, qz
+                    self.cube = qx - 1, qy + 1, qz
                 elif normalized_y > normalized_x:
-                        self.cube = qx - 1, qy, qz + 1
+                    self.cube = qx - 1, qy, qz + 1
 
-            
             # q = int(x / COL_WIDTH)
             # r = int((1/3*sqrt(3) * y - 1/3 * x) / sqrt(COL_WIDTH**2 + (TILE_HEIGHT/2)**2))
             # self.axial = q, r
             # sqrt(COL_WIDTH**2 + (TILE_HEIGHT/2)**2)
-
-
     return TranslatedPosition
 
 
@@ -117,7 +114,7 @@ class PygameClient(pygame.sprite.Group):
         self.popup.add("Welcome")
         self.font = pygame.font.Font("fonts/ArmWrestler.ttf", 30)
         self.player_color = None
-        self._images = dict((idx, pygame.image.load('tiles/%s.png' % color)) for idx,color in enumerate(self.COLORS))
+        self._images = dict((idx, pygame.image.load('tiles/%s.png' % color)) for idx, color in enumerate(self.COLORS))
 
     @property
     def _offset(self):
@@ -177,7 +174,7 @@ class PygameClient(pygame.sprite.Group):
         return 0 <= q < self._q and 0 <= r < self._r
 
     def draw(self, screen):
-        if self.player_color == 0: # TODO: FIXME black
+        if self.player_color == 0:  # TODO: FIXME black
             screen.fill((0, 0, 0))
         else:
             screen.fill((250, 250, 250))
@@ -188,8 +185,8 @@ class PygameClient(pygame.sprite.Group):
         pygame.draw.rect(screen, (50, 50, 50), (700, 0, 200, 700))
         total_tiles = self._q * self._r
         if total_tiles:
-            white_points = sum(1 for col in self._tiles for t in col if t.color == 1) # TODO: FIXME white
-            black_points = sum(1 for col in self._tiles for t in col if t.color == 0) # TODO: FIXME black
+            white_points = sum(1 for col in self._tiles for t in col if t.color == 1)  # TODO: FIXME white
+            black_points = sum(1 for col in self._tiles for t in col if t.color == 0)  # TODO: FIXME black
             other_points = total_tiles - (white_points + black_points)
 
             white_pixels = white_points / total_tiles * 700
@@ -258,7 +255,7 @@ class NetworkClient(PygameClient):
         self.reader = None
         self.writer = None
         self.popup.add("Press any key to connect")
-            
+
     def on_click(self, position):
         q, r = position.offset
         color_to_overpower = self._tiles[q][r].color
@@ -272,7 +269,7 @@ class NetworkClient(PygameClient):
         if not self.writer:
             print("lets connect")
             asyncio.async(self.connect())
-            
+
             return
         self.send_msg(("ready", (self.sockname,)))
 

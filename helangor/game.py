@@ -7,6 +7,8 @@ import yaml
 
 
 Client = namedtuple('Client', 'reader writer')
+
+
 class ClientStub:
 
     def __init__(self, reader, writer):
@@ -18,7 +20,9 @@ class ClientStub:
     def inform(self, msg_type, args):
         self.writer.write(msgpack.packb((msg_type, args)))
 
+
 class Server:
+
     """
     took the structure from
     https://github.com/Mionar/aiosimplechat
@@ -77,6 +81,7 @@ class Server:
     def close(self):
         self.close_clients()
 
+
 class Game:
 
     """
@@ -128,7 +133,6 @@ class Game:
             if color and color != client_color:
                 continue
             client.inform("new_map", (self._serialize_map(), self.player_group.color))
-
 
     def print_to_all(self, text):
         for client in self._clients.values():

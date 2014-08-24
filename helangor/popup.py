@@ -1,4 +1,4 @@
-#encoding: utf-8
+# encoding: utf-8
 """
 authors: bison, hwmrocker
 
@@ -9,6 +9,7 @@ import time
 
 
 class Popup(object):
+
     def __init__(self, **kwargs):
         """
         Popup is responsible for displaying popups in the game
