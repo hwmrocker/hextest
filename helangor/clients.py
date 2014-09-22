@@ -111,7 +111,7 @@ class PygameClient(pygame.sprite.Group):
         self.TranslatedPosition = translated_position_factory(self._x_offset, self._y_offset)
         self.cursor = HexTileSprite(self.TranslatedPosition(-1, -1), pygame.image.load('tiles/cursor.png'))
         self.popup = Popup()
-        self.popup.add("Welcome")
+        # self.popup.add("Welcome")
         self.font = pygame.font.Font("fonts/ArmWrestler.ttf", 30)
         self.player_color = None
         self._images = dict((idx, pygame.image.load('tiles/%s.png' % color)) for idx, color in enumerate(self.COLORS))

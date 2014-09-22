@@ -21,45 +21,51 @@ from helangor.clients import SpectatorClient, LocalClient, NetworkClient
 from helangor.game import Game, Server
 
 
-def draw():
-    local_client.draw(screen)
-    pygame.display.flip()
+class UI:
 
+    def __init__(self, host):
+        pygame.init()
+        self.local_client = NetworkClient(host=host)
+        self.screen = pygame.display.set_mode((900, 700))
 
-@asyncio.coroutine
-def main_loop(loop):
-    now = last = time.time()
+    def run(self):
+        loop = asyncio.get_event_loop()
+        try:
+            loop.run_until_complete(self.main_loop(loop))
+        finally:
+            loop.close()
 
-    while True:
-        # 30 frames per second, considering computation/drawing time
-        last, now = now, time.time()
-        time_per_frame = 1 / 30
-        yield from asyncio.sleep(last + time_per_frame - now)
+    def draw(self):
+        self.local_client.draw(self.screen)
+        pygame.display.flip()
 
-        for event in pygame.event.get():
-            if event.type == pygame.locals.QUIT:
-                return
-            local_client.handle_event(event)
+    @asyncio.coroutine
+    def main_loop(self, loop):
+        now = last = time.time()
 
-        # DRAWING
-        draw()
+        while True:
+            # 30 frames per second, considering computation/drawing time
+            last, now = now, time.time()
+            time_per_frame = 1 / 30
+            yield from asyncio.sleep(last + time_per_frame - now)
+
+            for event in pygame.event.get():
+                if event.type == pygame.locals.QUIT:
+                    return
+                self.local_client.handle_event(event)
+
+            # DRAWING
+            self.draw()
 
 
 if __name__ == "__main__":
     arguments = docopt(__doc__, version='helangor 0.8')
 
-    loop = asyncio.get_event_loop()
-    pygame.init()
-    screen = pygame.display.set_mode((900, 700))
     if not arguments.get('--connect'):
         game = Game(11, 8)
         gameserver = Server(game)
         asyncio.async(gameserver.run_server())
 
-    local_client = NetworkClient(host=arguments.get('--connect', 'localhost'))
+    ui = UI(host=arguments.get('--connect', 'localhost'))
+    ui.run()
     # asyncio.async(local_client.connect())
-
-    try:
-        loop.run_until_complete(main_loop(loop))
-    finally:
-        loop.close()
